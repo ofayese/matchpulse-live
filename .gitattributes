@@ -1,0 +1,13 @@
+# Normalize all text files to LF in both the repository and the working tree.
+# LF endings keep CI, Docker, and shell tooling deterministic on every platform.
+* text=auto eol=lf
+
+# Binary assets are never line-ending translated.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
