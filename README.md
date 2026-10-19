@@ -1,5 +1,7 @@
 # MatchPulse Live
 
+[![challenge-ci](https://github.com/ofayese/matchpulse-live/actions/workflows/challenge-ci.yml/badge.svg)](https://github.com/ofayese/matchpulse-live/actions/workflows/challenge-ci.yml)
+
 **MatchPulse Live** turns synthetic football events into evidence-backed live
 intelligence, then renders the same moment differently for an analyst,
 broadcaster, or fan in English, Spanish, or French.
