@@ -118,6 +118,33 @@ The published image is verified by pulling it anonymously with a
 credential-free Docker configuration and re-running the unsuppressed scan
 before any deployment reference is approved.
 
+### Published image
+
+| Property | Value |
+| -------- | ----- |
+| Tag | `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071` |
+| Digest | `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` |
+| Immutable reference | `ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` |
+| Source commit | `e8289265dc1920a2f313a9ec45ebf748591a3071` |
+| Publication run | `39475822157` |
+| Platform | `linux/amd64` |
+| Runtime user | `10001:10001` |
+| Entry point | `/usr/bin/python3.12 -m uvicorn` |
+
+The image was pulled back with a Docker configuration that contains no
+credential at all (`{"auths":{}}`) and the pull succeeded, which proves the
+package is anonymously readable. The pulled image was re-scanned with Trivy
+`0.76.0` and `--severity HIGH,CRITICAL --exit-code 1`: **0 HIGH, 0 CRITICAL**
+(26 findings in total: 22 MEDIUM, 4 LOW). It was then started with a
+read-only root filesystem, a 32M `/tmp` tmpfs, all Linux capabilities dropped,
+and `no-new-privileges`; it reported `healthy` and passed every smoke-test
+check with 0 failures.
+
+```bash
+docker run --rm -p 8080:8080 \
+  ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
+```
+
 ---
 
 ## Branch protection

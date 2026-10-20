@@ -94,6 +94,45 @@ An `AudienceProfile` contains:
 
 The same insight retains one `insight_id` and one evidence object across every variant. Only priority and presentation change. This makes personalization auditable and lets a judge compare modes side by side.
 
+`GET /v1/matches/{id}/variants` exposes that comparison as data: one
+authoritative moment with its evidence event ids and statistics, plus the
+presentation each audience receives. A `locale` query parameter overrides every
+audience's language for the request, so a judge can read the same moment in
+English, Spanish, and French without switching profiles.
+
+## 5a. Bounded demo runs
+
+A judge should be able to see the system work without a terminal, so the
+server can seed a match itself. A demo run is deliberately constrained:
+
+| Control | Value |
+|---|---|
+| Match identifier | `demo-<uuid12>`, unique per run, so no run inherits another run's state |
+| Event source | The existing deterministic synthetic generator only |
+| Event cap | 24 |
+| Cooldown | 20 seconds between runs |
+| Concurrency | One run in flight at a time |
+| Subscriber wait | The run waits for a WebSocket subscriber before emitting |
+| Safety | The synthetic-only gate still applies to every ingested event |
+
+`POST /v1/demo/runs` returns `409` while a run is in flight and `429` during
+the cooldown window. `GET /v1/demo/runs/{run_id}` reports the lifecycle.
+
+## 5b. Optional telemetry
+
+Telemetry is opt-in and allowlist-only. With no exporter configuration the
+application behaves exactly as it did before telemetry existed: every
+`record_*` call is a no-op. When enabled, the only recorded signals are route
+template, method, status, duration, accepted/rejected/duplicate event counts,
+Foundry attempt/success/fallback/rejection counts, Foundry latency, and
+WebSocket connect/disconnect/send/drop counts.
+
+Request bodies, response bodies, prompts, model output, evidence text,
+authorization data, cookies, client IPs, tokens, connection strings, and
+arbitrary match or event identifiers are never exported and are never used as
+metric dimensions. A route template that looks like a concrete identifier is
+rejected. Exporter failures are contained and never break a request.
+
 ## 6. Cloud deployment architecture
 
 ```mermaid

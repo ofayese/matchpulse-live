@@ -29,10 +29,12 @@ az deployment group create \
   --resource-group <approved-resource-group> \
   --template-file infra/main.bicep \
   --parameters prefix=matchpulse \
-  --parameters image=ghcr.io/OWNER/matchpulse-live@sha256:<digest>
+  --parameters image=ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
 ```
 
-`main.parameters.example.json` holds the same non-secret parameter set.
+`main.parameters.example.json` holds the same non-secret parameter set with a
+placeholder digest. The digest above is the audited, published image for
+source commit `e8289265dc1920a2f313a9ec45ebf748591a3071`.
 
 ## Foundry
 

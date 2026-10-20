@@ -32,6 +32,21 @@ template. It uses **no real match data**: every event is synthetic.
 
 ## Quick start
 
+Run the published image - no build, no setup, no credential:
+
+```bash
+docker run --rm -p 8080:8080 \
+  ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
+```
+
+Then open `http://127.0.0.1:8080/demo`, select an audience, and click
+**Start synthetic demo**. The image is the audited build of source commit
+`e8289265dc1920a2f313a9ec45ebf748591a3071`; it is anonymously pullable, runs
+as the non-root user `10001:10001` on `linux/amd64`, and was scanned with 0
+HIGH and 0 CRITICAL findings before publication.
+
+Or run it from source:
+
 ```bash
 python -m venv .venv
 . .venv/bin/activate              # Windows: .venv\Scripts\activate
@@ -49,7 +64,7 @@ matchpulse-synthetic --url http://127.0.0.1:8080 --delay 0.15 --events 50
 ```
 
 Then open `http://127.0.0.1:8080/demo`, select an audience, and click
-**Connect live overlay**.
+**Start synthetic demo**.
 
 With Docker:
 
@@ -99,6 +114,9 @@ Key routes:
 | `POST /v1/events/batch` | Ingest up to 500 ordered events |
 | `GET /v1/matches/{id}/state` | Current explainable match state |
 | `GET /v1/matches/{id}/recap?profile_id=fan-en` | Automated profile-specific recap |
+| `GET /v1/matches/{id}/variants?locale=es` | One authoritative moment presented to every audience |
+| `POST /v1/demo/runs` | Start a bounded, seeded, synthetic-only demo run |
+| `GET /v1/demo/runs/{run_id}` | Demo run lifecycle state |
 | `WS /ws/matches/{id}?profile_id=fan-en` | Timed, machine-readable live overlay stream |
 | `GET /health/live`, `GET /health/ready` | Liveness and readiness probes |
 | `GET /demo` | Live overlay demo page |
@@ -106,8 +124,17 @@ Key routes:
 ## Microsoft Foundry mode
 
 The live path is judgeable without cloud credentials. With no Foundry
-configuration the service reports `"foundry_mode": "deterministic-fallback"`
-on `/health/ready` and every insight comes from the deterministic pipeline.
+configuration the service reports `"foundry_mode": "disabled"` on
+`/health/ready` and every insight comes from the deterministic pipeline.
+
+`foundry_mode` reports one of four truthful states:
+
+| State | Meaning |
+|---|---|
+| `disabled` | No Foundry configuration; the deterministic pipeline is the only output |
+| `configured-unverified` | Configured, but no model call has succeeded yet |
+| `verified` | A model call completed and passed every guard |
+| `degraded-fallback` | A call failed or a rewrite was rejected; the deterministic narrative is used |
 
 To enable the optional rewrite, set environment variables (see
 [`.env.example`](.env.example)):
@@ -120,11 +147,16 @@ To enable the optional rewrite, set environment variables (see
 | `FOUNDRY_API_KEY` | Only for `api_key` | Runtime secret, never committed |
 | `FOUNDRY_API_VERSION` | No | Defaults to `2024-10-21` |
 | `FOUNDRY_TIMEOUT_SECONDS` | No | Defaults to `1.4` |
+| `FOUNDRY_MAX_CONCURRENCY` | No | Maximum concurrent model calls, default `4` |
+| `FOUNDRY_CALL_BUDGET` | No | Process-wide model call budget, default `60` |
 
 The model is a constrained copy editor, not the source of facts. It cannot
 create match state, alter evidence, or introduce a number that is not in the
 grounded input. On a timeout, invalid JSON, service error, unsupported claim,
-or schema mismatch, the service uses the deterministic narrative.
+or schema mismatch, the service uses the deterministic narrative. The rewrite
+is validated in a fixed order - markup, identifiers, names, causality, then
+numbers - and the rewritten numbers must form a subsequence of the source
+numbers.
 
 ## Challenge artifacts
 

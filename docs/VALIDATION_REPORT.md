@@ -59,6 +59,16 @@
   `BCP081`, `BCP318`, `BCP422`).
 - Remote CI: the `challenge-ci` workflow was dispatched for the exact commit
   `59dccafac618d9d2f3f0c1dc1d491ddec4ae537b` (run `39470530806`) and passed.
+- Container publication: `publish-container.yml` run `39475822157` published
+  `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071`
+  with digest
+  `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90`.
+  The blocking Trivy gate ran before the login and push step and passed. The
+  image was pulled back anonymously with a credential-free Docker
+  configuration, re-scanned at 0 HIGH and 0 CRITICAL, and passed the smoke
+  test with 0 failed checks as a hardened container (`linux/amd64`, user
+  `10001:10001`, read-only root filesystem, 32M `/tmp`, all capabilities
+  dropped, `no-new-privileges`, health `healthy`).
 
 ## Not verified here
 

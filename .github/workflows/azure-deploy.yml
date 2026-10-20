@@ -45,7 +45,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: azure/setup-bicep@v1
+      - name: Install the pinned Bicep CLI
+        run: |
+          set -euo pipefail
+          az bicep install --version 0.48.1 || az bicep install
+          az bicep version
 
       - name: Build template
         run: az bicep build --file infra/main.bicep --outfile main.json
@@ -81,7 +85,11 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - uses: azure/setup-bicep@v1
+      - name: Install the pinned Bicep CLI
+        run: |
+          set -euo pipefail
+          az bicep install --version 0.48.1 || az bicep install
+          az bicep version
 
       - name: Build template
         run: az bicep build --file infra/main.bicep --outfile main.json

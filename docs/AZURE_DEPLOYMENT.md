@@ -93,14 +93,14 @@ az deployment group create \
   --resource-group <approved-resource-group> \
   --template-file infra/main.bicep \
   --parameters prefix=matchpulse \
-  --parameters image=ghcr.io/<owner>/matchpulse-live:<tag> \
-  --parameters foundryEndpoint=https://<resource>.openai.azure.com \
-  --parameters foundryDeployment=<deployment> \
-  --parameters foundryAuthMode=managed_identity
+  --parameters image=ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90 \
+  --parameters foundryRuntimeMode=off
 ```
 
 `infra/main.parameters.example.json` contains the same non-secret parameter
-set as a starting point.
+set as a starting point. The image above is the audited, published build for
+source commit `e8289265dc1920a2f313a9ec45ebf748591a3071`; it was scanned with
+0 HIGH and 0 CRITICAL findings before publication.
 
 ### Parameters
 
@@ -108,7 +108,7 @@ set as a starting point.
 | --------- | -------- | ----- |
 | `prefix` | No | Lowercase prefix for resource names; hyphens are stripped automatically |
 | `location` | No | Defaults to the resource group location |
-| `image` | **Yes** | Immutable digest reference, for example `ghcr.io/OWNER/matchpulse-live@sha256:<digest>` |
+| `image` | **Yes** | Immutable digest reference, for example `ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` |
 | `foundryRuntimeMode` | No | `off` (default) or `validate`; `off` means no endpoint, no deployment, no key and no model inference |
 | `foundryEndpoint` | No | Only used when `foundryRuntimeMode` is `validate`; leave empty otherwise |
 | `foundryDeployment` | No | Only used when `foundryRuntimeMode` is `validate`; leave empty otherwise |
