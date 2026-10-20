@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import httpx
@@ -13,14 +14,17 @@ def item():
         formula="measured speed", confidence=.9), stats={"speed_kmh": 101}, expires_in_ms=12000)
 
 
-def test_foundry_guard_rejects_new_numeric_claim(monkeypatch):
-    class Response:
-        def raise_for_status(self):
-            return None
-        def json(self):
-            return {"choices": [{"message": {"content": json.dumps({"title": "Shot", "body": "A 130 km/h shot", "overlay_text": "130 km/h"})}}]}
-    monkeypatch.setattr(httpx, "post", lambda *args, **kwargs: Response())
+def test_foundry_guard_rejects_new_numeric_claim():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"choices": [{"message": {"content": json.dumps(
+            {"title": "Shot", "body": "A 130 km/h shot", "overlay_text": "130 km/h"})}}]})
+
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", "secret"), http_client=http)
     source = item()
-    output, warning = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", "secret")).rewrite(source)
+    try:
+        output, warning = asyncio.run(client.rewrite(source))
+    finally:
+        asyncio.run(http.aclose())
     assert output == source
-    assert warning and "ValueError" in warning
+    assert warning and "unsupported-number" in warning

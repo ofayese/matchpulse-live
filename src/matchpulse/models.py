@@ -155,3 +155,68 @@ class MatchRecap(StrictModel):
     bullets: list[str]
     evidence_event_ids: list[str]
     final_state: MatchState
+
+
+class DemoRunRequest(StrictModel):
+    """Optional controls for a bounded, server-side seeded demo run."""
+
+    seed: int | None = Field(default=None, ge=0, le=2_147_483_647)
+    event_cap: int | None = Field(default=None, ge=1, le=200)
+
+
+class DemoRunResponse(StrictModel):
+    """Descriptor for a started demo run."""
+
+    run_id: str
+    match_id: str
+    seed: int
+    status: Literal["awaiting-client", "running", "completed", "failed"]
+    event_count: int
+    websocket_path: str
+    synthetic_only: bool = True
+
+
+class DemoRunStatusResponse(StrictModel):
+    """Lifecycle state of a demo run."""
+
+    run_id: str
+    match_id: str
+    seed: int
+    status: Literal["awaiting-client", "running", "completed", "failed"]
+    event_count: int
+    insight_count: int
+    duplicate_count: int
+    error: str | None = None
+
+
+class MomentVariant(StrictModel):
+    """One audience's presentation of a single authoritative moment."""
+
+    profile_id: str
+    locale: Literal["en", "es", "fr"]
+    persona: Persona
+    priority: float = Field(ge=0, le=1)
+    title: str
+    body: str
+    overlay_text: str
+    evidence_event_ids: list[str]
+    stats: dict[str, float | int | str]
+
+
+class MomentComparison(StrictModel):
+    """One authoritative moment presented to every audience."""
+
+    insight_id: str
+    sequence: int
+    clock_ms: int
+    kind: str
+    evidence_event_ids: list[str]
+    stats: dict[str, float | int | str]
+    variants: list[MomentVariant]
+
+
+class VariantsResponse(StrictModel):
+    """All shared moments of a match, each with its audience variants."""
+
+    match_id: str
+    moments: list[MomentComparison]

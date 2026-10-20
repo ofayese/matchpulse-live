@@ -6,6 +6,7 @@ authoritative and is never allowed to depend on a model response.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 
@@ -14,6 +15,10 @@ import pytest
 
 from matchpulse.foundry import (
     AUTH_MANAGED_IDENTITY,
+    STATE_CONFIGURED_UNVERIFIED,
+    STATE_DEGRADED_FALLBACK,
+    STATE_DISABLED,
+    STATE_VERIFIED,
     ApiKeyCredentialProvider,
     FoundryCredentialError,
     FoundryNarrativeClient,
@@ -35,95 +40,262 @@ def item() -> PersonalizedInsight:
     )
 
 
-class _Response:
-    def __init__(self, payload: dict) -> None:
-        self._payload = payload
-
-    def raise_for_status(self) -> None:
-        return None
-
-    def json(self) -> dict:
-        return self._payload
+def _completion(content: str) -> httpx.Response:
+    return httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
 
 
-def _completion(content: str) -> _Response:
-    return _Response({"choices": [{"message": {"content": content}}]})
+def _client(handler) -> tuple[FoundryNarrativeClient, httpx.AsyncClient]:
+    transport = httpx.MockTransport(handler)
+    http = httpx.AsyncClient(transport=transport)
+    settings = FoundrySettings("https://example.test", "model", SECRET)
+    return FoundryNarrativeClient(settings, http_client=http), http
 
 
-def test_valid_guarded_foundry_response_is_applied(monkeypatch):
-    captured: dict = {}
+def _run(client: FoundryNarrativeClient, source: PersonalizedInsight | None = None):
+    return asyncio.run(client.rewrite(source or item()))
 
-    def fake_post(url, headers=None, timeout=None, **kwargs):
-        captured["url"] = url
-        captured["headers"] = headers
+
+def test_valid_guarded_foundry_response_is_applied():
+    seen: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["headers"] = dict(request.headers)
         return _completion(json.dumps({
             "title": "Faster shot",
             "body": "A shot reached 101 km/h.",
             "overlay_text": "101 km/h",
         }))
 
-    monkeypatch.setattr(httpx, "post", fake_post)
-    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET))
-    output, warning = client.rewrite(item())
+    client, http = _client(handler)
+    try:
+        output, warning = _run(client)
+    finally:
+        asyncio.run(http.aclose())
     assert warning is None
     assert output.title == "Faster shot"
     assert output.body == "A shot reached 101 km/h."
     assert output.overlay_text == "101 km/h"
-    assert captured["headers"]["api-key"] == SECRET
+    assert seen["headers"]["api-key"] == SECRET
+    assert client.state == STATE_VERIFIED
 
 
-def test_timeout_falls_back_to_deterministic_text(monkeypatch):
-    def fake_post(*args, **kwargs):
+def test_timeout_falls_back_to_deterministic_text():
+    def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.TimeoutException("timed out")
 
-    monkeypatch.setattr(httpx, "post", fake_post)
-    source = item()
-    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET))
-    output, warning = client.rewrite(source)
+    client, http = _client(handler)
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
     assert output == source
     assert warning and "TimeoutException" in warning
+    assert client.state == STATE_DEGRADED_FALLBACK
 
 
-def test_invalid_json_falls_back_to_deterministic_text(monkeypatch):
-    monkeypatch.setattr(httpx, "post", lambda *args, **kwargs: _completion("this is not json"))
-    source = item()
-    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET))
-    output, warning = client.rewrite(source)
+def test_connection_failure_falls_back_to_deterministic_text():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("connection refused")
+
+    client, http = _client(handler)
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
     assert output == source
-    assert warning and "JSONDecodeError" in warning
+    assert warning and "ConnectError" in warning
 
 
-def test_schema_mismatch_falls_back_to_deterministic_text(monkeypatch):
-    monkeypatch.setattr(httpx, "post", lambda *args, **kwargs: _completion(json.dumps({"title": "Only a title"})))
-    source = item()
-    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET))
-    output, warning = client.rewrite(source)
-    assert output == source
-    assert warning and "ValueError" in warning
+@pytest.mark.parametrize("status", [401, 403, 429, 500, 503])
+def test_http_error_statuses_fall_back_to_deterministic_text(status):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status, json={"error": "nope"})
 
-
-def test_service_error_falls_back_to_deterministic_text(monkeypatch):
-    class Failing:
-        def raise_for_status(self):
-            raise httpx.HTTPStatusError("boom", request=None, response=None)
-
-    monkeypatch.setattr(httpx, "post", lambda *args, **kwargs: Failing())
-    source = item()
-    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET))
-    output, warning = client.rewrite(source)
+    client, http = _client(handler)
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
     assert output == source
     assert warning and "HTTPStatusError" in warning
 
 
-def test_secret_never_appears_in_warning_or_logs(monkeypatch, caplog):
-    def fake_post(*args, **kwargs):
+def test_invalid_json_falls_back_to_deterministic_text():
+    client, http = _client(lambda request: _completion("this is not json"))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "malformed-json" in warning
+
+
+def test_missing_key_falls_back_to_deterministic_text():
+    client, http = _client(lambda request: _completion(json.dumps({"title": "Only a title"})))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unexpected-keys" in warning
+
+
+def test_unexpected_key_falls_back_to_deterministic_text():
+    payload = {"title": "T", "body": "A shot reached 101 km/h.", "overlay_text": "101 km/h", "extra": 1}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unexpected-keys" in warning
+
+
+def test_empty_output_falls_back_to_deterministic_text():
+    payload = {"title": "  ", "body": "A shot reached 101 km/h.", "overlay_text": "101 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "empty-output" in warning
+
+
+def test_oversized_output_falls_back_to_deterministic_text():
+    payload = {"title": "T", "body": "A shot reached 101 km/h. " + "x" * 900, "overlay_text": "101 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "oversized-output" in warning
+
+
+def test_new_number_falls_back_to_deterministic_text():
+    payload = {"title": "T", "body": "A shot reached 102 km/h.", "overlay_text": "102 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unsupported-number" in warning
+
+
+def test_changed_number_falls_back_to_deterministic_text():
+    payload = {"title": "T", "body": "A shot reached 99 km/h.", "overlay_text": "99 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unsupported-number" in warning
+
+
+def test_reordered_numbers_fall_back_to_deterministic_text():
+    source = PersonalizedInsight(
+        insight_id="i", match_id="m", profile_id="fan", locale="en", persona="fan",
+        priority=.8, title="Score", body="The score is now 2-1.", overlay_text="2-1",
+        clock_ms=1, sequence=1, severity="notable",
+        evidence=Evidence(event_ids=["e1"], inputs={"score": "2-1"}, formula="aggregate", confidence=.9),
+        stats={"score": "2-1"}, expires_in_ms=12000,
+    )
+    payload = {"title": "Score", "body": "The score is now 1-2.", "overlay_text": "1-2"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unsupported-number" in warning
+
+
+def test_unsupported_identifier_falls_back_to_deterministic_text():
+    payload = {"title": "T", "body": "A shot reached 101 km/h by NB-42.", "overlay_text": "101 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unsupported-identifier" in warning
+
+
+def test_unsupported_team_identifier_falls_back_to_deterministic_text():
+    payload = {"title": "T", "body": "A shot reached 101 km/h for Arsenal-FC.", "overlay_text": "101 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unsupported-identifier" in warning
+
+
+def test_unsupported_name_falls_back_to_deterministic_text():
+    payload = {"title": "T", "body": "A shot reached 101 km/h at Wembley Stadium.", "overlay_text": "101 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unsupported-name" in warning
+
+
+def test_unsupported_causal_claim_falls_back_to_deterministic_text():
+    payload = {"title": "T", "body": "A shot reached 101 km/h because of the wind.", "overlay_text": "101 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "unsupported-causal-claim" in warning
+
+
+def test_html_output_falls_back_to_deterministic_text():
+    payload = {"title": "<script>alert(1)</script>", "body": "A shot reached 101 km/h.",
+               "overlay_text": "101 km/h"}
+    client, http = _client(lambda request: _completion(json.dumps(payload)))
+    try:
+        source = item()
+        output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "markup-output" in warning
+
+
+def test_secret_never_appears_in_warning_or_logs(caplog):
+    def handler(request: httpx.Request) -> httpx.Response:
         raise RuntimeError(f"transport rejected credential {SECRET}")
 
-    monkeypatch.setattr(httpx, "post", fake_post)
-    source = item()
-    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET))
-    with caplog.at_level(logging.DEBUG):
-        output, warning = client.rewrite(source)
+    client, http = _client(handler)
+    try:
+        source = item()
+        with caplog.at_level(logging.DEBUG):
+            output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
     assert output == source
     assert warning is not None
     assert SECRET not in warning
@@ -196,3 +368,99 @@ def test_managed_identity_provider_falls_back_when_identity_is_unavailable():
     provider = ManagedIdentityCredentialProvider(credential=Broken())
     with pytest.raises(FoundryCredentialError):
         provider.headers()
+
+
+def test_configured_client_reports_unverified_before_any_call():
+    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET))
+    assert client.state == STATE_CONFIGURED_UNVERIFIED
+    assert client.state != STATE_VERIFIED
+    assert client.state != STATE_DISABLED
+
+
+def test_call_budget_is_enforced():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return _completion(json.dumps({
+            "title": "Faster shot", "body": "A shot reached 101 km/h.", "overlay_text": "101 km/h"}))
+
+    settings = FoundrySettings("https://example.test", "model", SECRET, call_budget=1)
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = FoundryNarrativeClient(settings, http_client=http)
+
+    async def scenario():
+        first, _ = await client.rewrite(item())
+        second, warning = await client.rewrite(item())
+        return first, second, warning
+
+    try:
+        first, second, warning = asyncio.run(scenario())
+    finally:
+        asyncio.run(http.aclose())
+    assert first.title == "Faster shot"
+    assert second.title == "Shot"
+    assert warning and "call-budget-exhausted" in warning
+
+
+def test_rewrite_many_preserves_order_and_falls_back_per_item():
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        text = body["messages"][1]["content"]
+        if "Shot" in text and "shot reached 101" in text:
+            return _completion(json.dumps({
+                "title": "Faster shot", "body": "A shot reached 101 km/h.", "overlay_text": "101 km/h"}))
+        raise httpx.TimeoutException("timed out")
+
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET), http_client=http)
+    items = [item(), item()]
+    try:
+        outputs, warnings = asyncio.run(client.rewrite_many(items))
+    finally:
+        asyncio.run(http.aclose())
+    assert len(outputs) == 2
+    assert all(output.title == "Faster shot" for output in outputs)
+    assert warnings == []
+
+
+def test_rewrite_many_falls_back_for_every_failed_item():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.TimeoutException("timed out")
+
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = FoundryNarrativeClient(FoundrySettings("https://example.test", "model", SECRET), http_client=http)
+    items = [item(), item()]
+    try:
+        outputs, warnings = asyncio.run(client.rewrite_many(items))
+    finally:
+        asyncio.run(http.aclose())
+    assert outputs == items
+    assert len(warnings) == 2
+
+
+def test_rewrite_many_bounds_concurrency():
+    import threading
+
+    active = 0
+    peak = 0
+    lock = threading.Lock()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal active, peak
+        with lock:
+            active += 1
+            peak = max(peak, active)
+        try:
+            return _completion(json.dumps({
+                "title": "Faster shot", "body": "A shot reached 101 km/h.", "overlay_text": "101 km/h"}))
+        finally:
+            with lock:
+                active -= 1
+
+    settings = FoundrySettings("https://example.test", "model", SECRET, max_concurrency=2)
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = FoundryNarrativeClient(settings, http_client=http)
+    items = [item() for _ in range(6)]
+    try:
+        asyncio.run(client.rewrite_many(items))
+    finally:
+        asyncio.run(http.aclose())
+    assert peak <= 2
