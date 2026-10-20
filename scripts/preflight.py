@@ -18,10 +18,11 @@ REQUIRED = [
     "scripts/preflight.py", "scripts/validate_solution.py", "scripts/smoke_test.py",
     "scripts/bootstrap.sh", "scripts/bootstrap.ps1",
     ".github/workflows/challenge-ci.yml", ".github/workflows/azure-deploy.yml",
+    ".github/workflows/publish-container.yml",
     ".env.example", ".gitignore", ".dockerignore",
 ]
 FORBIDDEN_NAMES = {".env", "id_rsa", "id_ed25519", "secrets.json", "credentials.json", ".npmrc", ".pypirc"}
-FORBIDDEN_PARTS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".vs", ".ruff_cache", "node_modules"}
+FORBIDDEN_PARTS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".vs", ".ruff_cache", "node_modules", "release-tools"}
 SECRET_PATTERNS = {
     "GitHub token": re.compile(r"gh[pousr]_[A-Za-z0-9]{30,}"),
     "Azure storage key": re.compile(r"AccountKey=[A-Za-z0-9+/=]{40,}"),

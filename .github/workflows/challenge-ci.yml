@@ -69,5 +69,23 @@ jobs:
           test "$(docker image inspect matchpulse-live:ci --format '{{.Config.User}}')" != "0"
           test "$(docker image inspect matchpulse-live:ci --format '{{.Config.User}}')" != "root"
 
+      # Fail-closed vulnerability gate. Any HIGH or CRITICAL finding fails the
+      # build. The gate is never skipped, reordered after a push, or made
+      # non-blocking, and it uses no ignore file, no ignore-unfixed mode, no
+      # blanket CVE exception and no severity downgrade.
+      - name: Block on HIGH or CRITICAL vulnerabilities
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v trivy-cache:/root/.cache/trivy \
+            "aquasec/trivy:0.76.0" image \
+            --scanners vuln \
+            --vuln-type os,library \
+            --severity HIGH,CRITICAL \
+            --exit-code 1 \
+            --no-progress \
+            matchpulse-live:ci
+
       - name: Compose configuration
         run: docker compose -f compose.challenge.yml config
