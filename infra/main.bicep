@@ -8,13 +8,20 @@ param prefix string = 'matchpulse'
 @description('Location for all resources. Defaults to the resource group location.')
 param location string = resourceGroup().location
 
-@description('Full container image reference, for example ghcr.io/OWNER/REPO:TAG or ACR_NAME.azurecr.io/matchpulse:TAG.')
+@description('The deployed image must be pinned to an immutable digest, for example ghcr.io/OWNER/REPO@sha256:DIGEST.')
 param image string
 
-@description('Optional Microsoft Foundry / Azure OpenAI endpoint. Leave empty to run the deterministic pipeline only.')
+@description('Foundry runtime mode. off keeps the deterministic pipeline authoritative with no model inference at all.')
+@allowed([
+  'off'
+  'validate'
+])
+param foundryRuntimeMode string = 'off'
+
+@description('Optional Microsoft Foundry / Azure OpenAI endpoint. Only used when foundryRuntimeMode is validate.')
 param foundryEndpoint string = ''
 
-@description('Optional Foundry deployment name. Leave empty to run the deterministic pipeline only.')
+@description('Optional Foundry deployment name. Only used when foundryRuntimeMode is validate.')
 param foundryDeployment string = ''
 
 @description('Foundry authentication mode. managed_identity is preferred and needs no stored secret.')
@@ -24,20 +31,28 @@ param foundryDeployment string = ''
 ])
 param foundryAuthMode string = 'managed_identity'
 
+@description('Enable Application Insights and the Log Analytics workspace used for bounded cost-controlled monitoring.')
+param enableMonitoring bool = true
+
 @description('Log Analytics retention in days.')
 @minValue(7)
-@maxValue(730)
-param logRetentionInDays int = 30
+@maxValue(30)
+param logRetentionInDays int = 7
 
-@description('Minimum container replica count.')
-@minValue(0)
-@maxValue(10)
-param minReplicas int = 1
-
-@description('Maximum container replica count.')
+@description('Daily ingestion quota in GB. This is the explicit low cost cap for monitoring.')
 @minValue(1)
-@maxValue(20)
-param maxReplicas int = 5
+@maxValue(10)
+param dailyQuotaGb int = 1
+
+@description('Minimum container replica count. Zero keeps the workload scale to zero.')
+@minValue(0)
+@maxValue(1)
+param minReplicas int = 0
+
+@description('Maximum container replica count. One replica is the supported maximum until durable state exists.')
+@minValue(1)
+@maxValue(1)
+param maxReplicas int = 1
 
 @description('HTTP concurrency per replica used by the Container Apps scaling rule.')
 @minValue(1)
@@ -49,26 +64,39 @@ var suffix = uniqueString(resourceGroup().id)
 var workspaceName = '${namePrefix}-logs-${suffix}'
 var environmentName = '${namePrefix}-env-${suffix}'
 var appName = '${namePrefix}-api-${suffix}'
-var eventNamespaceName = '${namePrefix}eh${suffix}'
 var insightsName = '${namePrefix}-appi-${suffix}'
 
-resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+resource logs 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (enableMonitoring) {
   name: workspaceName
   location: location
   properties: {
     retentionInDays: logRetentionInDays
     features: { enableLogAccessUsingOnlyResourcePermissions: true }
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
   }
   sku: { name: 'PerGB2018' }
 }
 
-resource insights 'Microsoft.Insights/components@2020-02-02' = {
+// The daily quota is the explicit cost cap for the monitoring pipeline.
+resource quota 'Microsoft.OperationalInsights/workspaces/quotas@2022-10-01' = if (enableMonitoring) {
+  parent: logs
+  name: 'primary'
+  properties: {
+    dailyQuotaGB: dailyQuotaGb
+  }
+}
+
+resource insights 'Microsoft.Insights/components@2020-02-02' = if (enableMonitoring) {
   name: insightsName
   location: location
   kind: 'web'
   properties: {
     Application_Type: 'web'
     WorkspaceResourceId: logs.id
+    IngestionMode: 'Basic'
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
   }
 }
 
@@ -76,64 +104,47 @@ resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: environmentName
   location: location
   properties: {
-    appLogsConfiguration: {
+    // No workload profiles: this is the Consumption plan.
+    zoneRedundant: false
+    appLogsConfiguration: enableMonitoring ? {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
         customerId: logs.properties.customerId
         sharedKey: logs.listKeys().primarySharedKey
       }
+    } : {
+      destination: 'none'
     }
   }
 }
 
-// Event Hubs is a scale-out seam for future ingestion. No Event Hubs consumer
-// is implemented in this challenge; HTTP ingestion remains the supported path.
-resource eventNamespace 'Microsoft.EventHub/namespaces@2024-01-01' = {
-  name: eventNamespaceName
-  location: location
-  sku: { name: 'Basic', tier: 'Basic', capacity: 1 }
-  properties: {
-    publicNetworkAccess: 'Enabled'
-    minimumTlsVersion: '1.2'
-  }
-}
-
-resource matchEvents 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
-  parent: eventNamespace
-  name: 'synthetic-match-events'
-  properties: {
-    messageRetentionInDays: 1
-    partitionCount: 2
-  }
-}
-
-var insightsSecret = [
+// No Event Hubs resource is declared. The HTTP ingestion path remains the
+// supported path until a real consumer, checkpoint and processed-message
+// trace exist.
+var insightsSecret = enableMonitoring ? [
   {
     name: 'applicationinsights-connection-string'
     value: insights.properties.ConnectionString
   }
-]
+] : []
 
-var baseEnv = [
+var baseEnv = concat([
   {
     name: 'CHALLENGE_SYNTHETIC_ONLY'
     value: 'true'
   }
+], enableMonitoring ? [
   {
     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
     secretRef: 'applicationinsights-connection-string'
   }
-  {
-    name: 'AZURE_EVENTHUB_NAMESPACE'
-    value: eventNamespace.properties.serviceBusEndpoint
-  }
-  {
-    name: 'AZURE_EVENTHUB_NAME'
-    value: matchEvents.name
-  }
-]
+] : [])
 
-var foundryEnv = empty(foundryEndpoint) ? [] : [
+// Foundry is off by default: no endpoint, no deployment name, no API key and
+// therefore no model inference and no public spend.
+var foundryEnabled = foundryRuntimeMode == 'validate' && !empty(foundryEndpoint) && !empty(foundryDeployment)
+
+var foundryEnv = foundryEnabled ? [
   {
     name: 'FOUNDRY_ENDPOINT'
     value: foundryEndpoint
@@ -150,7 +161,7 @@ var foundryEnv = empty(foundryEndpoint) ? [] : [
     name: 'FOUNDRY_AZURE_SCOPE'
     value: 'https://cognitiveservices.azure.com/.default'
   }
-]
+] : []
 
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: appName
@@ -223,8 +234,11 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
 output appUrl string = 'https://${app.properties.configuration.ingress.fqdn}'
 output appName string = app.name
 output managedIdentityPrincipalId string = app.identity.principalId
-output eventHubNamespace string = eventNamespace.name
-output eventHubName string = matchEvents.name
-output applicationInsightsName string = insights.name
-output logAnalyticsWorkspace string = logs.name
-output foundryConfigured bool = !empty(foundryEndpoint)
+output imageReference string = image
+output minReplicas int = minReplicas
+output maxReplicas int = maxReplicas
+output foundryRuntimeMode string = foundryRuntimeMode
+output foundryConfigured bool = foundryEnabled
+output monitoringEnabled bool = enableMonitoring
+output applicationInsightsName string = enableMonitoring ? insights.name : ''
+output logAnalyticsWorkspace string = enableMonitoring ? logs.name : ''

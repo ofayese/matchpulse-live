@@ -6,25 +6,34 @@
       "value": "matchpulse"
     },
     "image": {
-      "value": "ghcr.io/OWNER/matchpulse-live:TAG"
+      "value": "ghcr.io/OWNER/matchpulse-live@sha256:REPLACE_WITH_THE_VERIFIED_IMMUTABLE_DIGEST"
+    },
+    "foundryRuntimeMode": {
+      "value": "off"
     },
     "foundryEndpoint": {
-      "value": "https://YOUR-RESOURCE.openai.azure.com"
+      "value": ""
     },
     "foundryDeployment": {
-      "value": "YOUR-DEPLOYMENT"
+      "value": ""
     },
     "foundryAuthMode": {
       "value": "managed_identity"
     },
-    "logRetentionInDays": {
-      "value": 30
+    "enableMonitoring": {
+      "value": true
     },
-    "minReplicas": {
+    "logRetentionInDays": {
+      "value": 7
+    },
+    "dailyQuotaGb": {
       "value": 1
     },
+    "minReplicas": {
+      "value": 0
+    },
     "maxReplicas": {
-      "value": 5
+      "value": 1
     },
     "concurrentRequestsPerReplica": {
       "value": 50
