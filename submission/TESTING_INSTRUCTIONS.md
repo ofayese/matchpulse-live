@@ -48,5 +48,5 @@ Open `http://127.0.0.1:8080/demo`.
 
 - State is in process memory; restarting clears the demo match.
 - Multi-replica WebSocket fan-out needs a managed backplane before production scale.
-- Event Hubs is provisioned as a scale-out seam; the submitted HTTP MVP does not claim an active Event Hubs consumer unless the entrant adds and demonstrates one.
+- Event Hubs is NOT part of the deployed baseline; no consumer, checkpoint store, or processed-message trace exists. The submitted HTTP MVP uses `POST /v1/events`.
 - Languages beyond en/es/fr require reviewed templates or a translation adapter.

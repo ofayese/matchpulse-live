@@ -138,8 +138,7 @@ or schema mismatch, the service uses the deterministic narrative.
   layout, CI, and manual configuration steps.
 - [`submission/`](submission) - pitch, project description, 120-second demo
   script, testing instructions, and registration/submission checklists.
-- [`infra/`](infra) - Azure Container Apps, Event Hubs, and Application
-  Insights deployment template.
+- [`infra/`](infra) - Azure Container Apps Bicep template.
 
 ## Safety and scope boundary
 

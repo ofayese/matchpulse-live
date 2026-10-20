@@ -1,14 +1,15 @@
-# Validation report - 2026-10-19
+# Validation report - 2026-10-20
 
 ## Verified in this workspace
 
 - Python source, tests, and preflight compiled successfully on Python 3.14.8.
   Python 3.12 is the reference interpreter (CI pins 3.12 and the container image
-  uses `python:3.12-slim`); 3.12 is not installed on the validation machine.
-- Test suite: **44 passed, 0 failed**. The original bundle baseline was 9 passed,
-  0 failed; no test was skipped or weakened to accommodate the Visual Studio
-  conversion.
-- Coverage: **88.13%** total, above the 80% gate.
+  runs `/usr/bin/python3.12`, verified as 3.12.3); 3.12 is not installed on the
+  validation machine.
+- Test suite: **101 passed, 0 failed**. The original bundle baseline was 9 passed,
+  0 failed, and the Visual Studio conversion baseline was 44 passed, 0 failed;
+  no test was skipped or weakened.
+- Coverage: **88.84%** total, above the 80% gate.
 - Static analysis: `ruff check src tests scripts` - **All checks passed**.
 - Submission preflight: required files present, source compiles, no secrets or
   forbidden files, synthetic-only gate documented, solution configurations
@@ -26,12 +27,38 @@
   schema mismatch, and unsupported-number cases all fall back to the
   deterministic narrative; no secret value appeared in a warning, log record, or
   response.
-- Docker image `matchpulse-live:local` built and ran: non-root uid 10001,
-  read-only root filesystem, `/tmp` bounded at 32M, all Linux capabilities
-  dropped, `no-new-privileges`, restart count 0, health `healthy`.
-- Bicep: `az bicep build` and `az bicep lint` succeeded. The compiled template
-  contains no hardcoded subscription id, no hardcoded tenant id, and no secret
-  literal.
+- Foundry concurrency and budget: the provider is asynchronous, bounds its own
+  concurrency, enforces a process-wide call budget, performs zero retries, and
+  reports one of four truthful states - `disabled`, `configured-unverified`,
+  `verified`, `degraded-fallback`.
+- Demo runs: unique `demo-<uuid12>` match identifiers, deterministic synthetic
+  generation, a 24-event cap, a 20 second cooldown, one concurrent run, and a
+  wait for a WebSocket subscriber before emission.
+- Variant comparison: one authoritative moment is presented to every audience
+  with the same insight id, evidence event ids, and statistics.
+- Telemetry: opt-in and allowlist-only. With no exporter configuration the
+  application behaves exactly as before, exporter failures are non-fatal, and
+  no arbitrary identifier is ever used as a metric dimension.
+- Browser demo: dynamic content is built with `createElement` and
+  `textContent`; there is no `innerHTML`, `outerHTML`, `insertAdjacentHTML`, or
+  `document.write` anywhere in the page.
+- Container image `matchpulse-preflight:local`
+  (`sha256:0af07f9f07bd69154bcc6dbb5444f525e65721b4c846d8c401220f9e9fe0b4a9`):
+  non-root uid `10001:10001`, `linux/amd64`, 4 layers, CPython 3.12.3, and a
+  successful import probe for `fastapi`, `pydantic`, `uvicorn`, `httpx`, and
+  `matchpulse`.
+- Vulnerability gate: Trivy `0.76.0` (database updated 2026-10-20) scanned the
+  built image with `--scanners vuln --severity HIGH,CRITICAL --exit-code 1`
+  and no ignore flags. Result: **0 HIGH, 0 CRITICAL** (26 findings in total:
+  22 MEDIUM, 4 LOW). The same blocking gate now runs in
+  `.github/workflows/challenge-ci.yml` and in
+  `.github/workflows/publish-container.yml` before any registry login or push.
+- Bicep: `az bicep build` and `az bicep lint` both exited 0. The compiled
+  template contains no hardcoded subscription id, no hardcoded tenant id, and
+  no secret literal. Four non-blocking warning codes remain (`BCP187`,
+  `BCP081`, `BCP318`, `BCP422`).
+- Remote CI: the `challenge-ci` workflow was dispatched for the exact commit
+  `59dccafac618d9d2f3f0c1dc1d491ddec4ae537b` (run `39470530806`) and passed.
 
 ## Not verified here
 
@@ -44,10 +71,11 @@
   deployment has been approved, so nothing was deployed.
 - A live Microsoft Foundry call. No endpoint, deployment, or credential was
   supplied, so only the guarded fallback path was exercised.
-- Event Hubs consumption. Event Hubs is provisioned by the Bicep template as a
-  scale-out seam only; no consumer is implemented or tested.
+- Event Hubs is NOT part of the deployed baseline: no consumer, checkpoint store, or processed-message trace exists.
 - Public WebSocket behavior over Azure ingress.
-- GitHub Actions on the remote repository, hosted demo, and public video.
+- A hosted public demo URL and a public demo video. The remote `challenge-ci`
+  workflow was verified for the audited commit; the hosted demo and the video
+  are still outstanding.
 
 ## Reproduction
 

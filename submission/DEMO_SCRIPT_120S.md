@@ -34,7 +34,7 @@
 
 **Screen:** Open a Spanish recap, then architecture or Azure resource view.
 
-**Voice:** "The same state creates an automated, profile-specific recap. The containerized service deploys to Azure Container Apps, with Event Hubs as the event seam and Application Insights for operations."
+**Voice:** "The same state creates an automated, profile-specific recap. The containerized service deploys to Azure Container Apps, with Application Insights for operations."
 
 ## 1:47-1:53 - Close
 

@@ -36,7 +36,7 @@ This trace maps the official Inside the Game challenge to concrete evidence in t
 
 1. **Grand Prize:** complete end-to-end audience experience with strong controls.
 2. **Best Multi-Agent System:** clearest current fit; distinct agents, shared state, handoffs, and recovery are implemented.
-3. **Best Azure Cloud Native Integration:** credible after deploying the Bicep and showing Event Hubs/Container Apps/Application Insights.
+3. **Best Azure Cloud Native Integration:** credible after deploying the Bicep and showing Container Apps/Application Insights.
 4. **Best Use of Microsoft Foundry:** credible only after a real Foundry endpoint is configured and demonstrated; do not claim this category from the adapter alone.
 5. **Best Enterprise Solution:** support with security boundaries, evidence lineage, idempotency, CI, health checks, and documented production gaps.
 

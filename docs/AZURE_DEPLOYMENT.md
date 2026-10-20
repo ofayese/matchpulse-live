@@ -27,10 +27,9 @@ subscription as part of the published repository.
 | `Microsoft.Insights/components` | Application Insights, linked to the workspace |
 | `Microsoft.App/managedEnvironments` | Container Apps environment |
 | `Microsoft.App/containerApps` | The MatchPulse Live service, system-assigned managed identity, HTTPS-only ingress, liveness/readiness/startup probes |
-| `Microsoft.EventHub/namespaces` + `eventhubs` | Scale-out seam for future ingestion |
 
-The Event Hubs namespace is provisioned as a **scale-out seam only**. No
-Event Hubs consumer is implemented or tested in this challenge; HTTP ingestion
+
+Event Hubs is NOT part of the deployed baseline: no consumer, checkpoint store, or processed-message trace exists. HTTP ingestion
 (`POST /v1/events`) remains the supported ingestion path.
 
 ---
@@ -86,7 +85,7 @@ az deployment group validate \
 ## 2. Deploy
 
 > **Creates billable resources.** Container Apps, Container Apps environment,
-> Log Analytics, and Event Hubs all incur cost. Run this only against an
+> Log Analytics all incur cost. Run this only against an
 > explicitly approved subscription and resource group.
 
 ```bash
@@ -109,12 +108,15 @@ set as a starting point.
 | --------- | -------- | ----- |
 | `prefix` | No | Lowercase prefix for resource names; hyphens are stripped automatically |
 | `location` | No | Defaults to the resource group location |
-| `image` | **Yes** | Full container image reference |
-| `foundryEndpoint` | No | Leave empty to run the deterministic pipeline only |
-| `foundryDeployment` | No | Leave empty to run the deterministic pipeline only |
+| `image` | **Yes** | Immutable digest reference, for example `ghcr.io/OWNER/matchpulse-live@sha256:<digest>` |
+| `foundryRuntimeMode` | No | `off` (default) or `validate`; `off` means no endpoint, no deployment, no key and no model inference |
+| `foundryEndpoint` | No | Only used when `foundryRuntimeMode` is `validate`; leave empty otherwise |
+| `foundryDeployment` | No | Only used when `foundryRuntimeMode` is `validate`; leave empty otherwise |
 | `foundryAuthMode` | No | `managed_identity` (default) or `disabled` |
-| `logRetentionInDays` | No | 7-730, default 30 |
-| `minReplicas` / `maxReplicas` | No | 0-10 / 1-20 |
+| `enableMonitoring` | No | Enables Application Insights and the Log Analytics workspace, default `true` |
+| `logRetentionInDays` | No | 7-30, default 7 |
+| `dailyQuotaGb` | No | 1-10, default 1; the explicit low cost cap for monitoring |
+| `minReplicas` / `maxReplicas` | No | 0-1 / 1-1; one replica is the maximum until durable state exists |
 | `concurrentRequestsPerReplica` | No | 1-200, default 50 |
 
 There is **no secret parameter**. The Foundry API key is not accepted by the
@@ -122,9 +124,10 @@ template; managed identity is used instead.
 
 ### Outputs
 
-`appUrl`, `appName`, `managedIdentityPrincipalId`, `eventHubNamespace`,
-`eventHubName`, `applicationInsightsName`, `logAnalyticsWorkspace`,
-`foundryConfigured`. No output exposes a secret.
+`appUrl`, `appName`, `managedIdentityPrincipalId`, `imageReference`,
+`minReplicas`, `maxReplicas`, `foundryRuntimeMode`, `foundryConfigured`,
+`monitoringEnabled`, `applicationInsightsName`, `logAnalyticsWorkspace`.
+No output exposes a secret.
 
 ---
 
@@ -195,7 +198,6 @@ To remove only the application and keep the surrounding resources:
 
 ```bash
 az containerapp delete --name <app-name> --resource-group <approved-resource-group> --yes
-az eventhub namespace delete --name <namespace-name> --resource-group <approved-resource-group>
 ```
 
 Log Analytics and Application Insights are deleted with the resource group or

@@ -98,9 +98,8 @@ The same insight retains one `insight_id` and one evidence object across every v
 
 ```mermaid
 flowchart TB
-  P[Seeded synthetic producer] --> EH[Azure Event Hubs]
-  EH --> CA[Azure Container Apps - MatchPulse]
-  CA --> FA[Microsoft Foundry deployment]
+  P[Seeded synthetic producer] -->|POST /v1/events| CA[Azure Container Apps - MatchPulse]
+  CA --> FA[Microsoft Foundry deployment (validate mode only)]
   CA --> AI[Application Insights]
   CA --> WSS[HTTPS / WebSocket ingress]
   WSS --> UI[Browser overlay]
@@ -108,7 +107,7 @@ flowchart TB
   KV[Azure Key Vault] -. secret injection .-> CA
 ```
 
-The supplied Bicep deploys Container Apps, Event Hubs, Log Analytics, and Application Insights. The MVP accepts HTTP events directly so judges can test it without another producer. Event Hubs is the scale-out seam. A production deployment should add a consumer checkpoint store and durable event/state persistence; these are intentionally outside the seven-day challenge MVP.
+The supplied Bicep deploys Container Apps, Log Analytics, and Application Insights. The MVP accepts HTTP events directly via `POST /v1/events` so judges can test it without another producer. Event Hubs is NOT part of the deployed baseline; no consumer, checkpoint store, or processed-message trace exists. A production deployment should add durable event/state persistence; these are intentionally outside the seven-day challenge MVP.
 
 ## 7. Deployment boundary
 
@@ -120,8 +119,8 @@ MatchPulse Live is a **standalone sidecar**. It is designed to run next to other
 - it keeps its own API surface, its own synthetic dataset, and its own deployment and security conventions;
 - it can be published as a clean standalone public repository without exposing any neighbouring system.
 
-A production deployment should add a consumer checkpoint store and durable
-event/state persistence for the Event Hubs path; these are intentionally
+A production deployment should add durable
+event/state persistence; these are intentionally
 outside the challenge MVP.
 
 ## 8. Security, privacy, and IP
