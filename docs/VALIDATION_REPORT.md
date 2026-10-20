@@ -59,6 +59,13 @@
   `BCP081`, `BCP318`, `BCP422`).
 - Remote CI: the `challenge-ci` workflow was dispatched for the exact commit
   `59dccafac618d9d2f3f0c1dc1d491ddec4ae537b` (run `39470530806`) and passed.
+  The push to `main` for the published commit
+  `e8289265dc1920a2f313a9ec45ebf748591a3071` also passed (run `39475810224`).
+- Infrastructure validation: `azure-deploy` failed for the published commit
+  because the workflow referenced an action repository that does not exist.
+  The workflow now installs the pinned Bicep CLI `0.48.1` explicitly, and the
+  runs for the follow-up commit `c1177ca` passed - `azure-deploy` run
+  `39476696692` and `challenge-ci` run `39476696757`.
 - Container publication: `publish-container.yml` run `39475822157` published
   `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071`
   with digest
