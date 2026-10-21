@@ -52,7 +52,7 @@
   and no ignore flags. Result: **0 HIGH, 0 CRITICAL** (26 findings in total:
   22 MEDIUM, 4 LOW). The same blocking gate now runs in
   `.github/workflows/challenge-ci.yml` and in
-  `.github/workflows/publish-container.yml` before any registry login or push.
+  `.github/workflows/release-attest.yml` before any registry login or push.
 - Bicep: `az bicep build` and `az bicep lint` both exited 0. The compiled
   template contains no hardcoded subscription id, no hardcoded tenant id, and
   no secret literal. Four non-blocking warning codes remain (`BCP187`,

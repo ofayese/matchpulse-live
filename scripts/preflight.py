@@ -19,7 +19,7 @@ REQUIRED = [
     "scripts/hardened_smoke_test.py", "scripts/verify_release_binding.py",
     "scripts/bootstrap.sh", "scripts/bootstrap.ps1",
     ".github/workflows/challenge-ci.yml", ".github/workflows/azure-deploy.yml",
-    ".github/workflows/publish-container.yml",
+    ".github/workflows/release-attest.yml",
     ".env.example", ".gitignore", ".dockerignore",
 ]
 FORBIDDEN_NAMES = {".env", "id_rsa", "id_ed25519", "secrets.json", "credentials.json", ".npmrc", ".pypirc"}

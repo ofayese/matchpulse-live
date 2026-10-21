@@ -21,6 +21,14 @@ RUN python -m pip install \
 
 FROM ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac AS runtime
 
+# The OCI revision and source labels record the exact commit the published
+# image was built from. The release workflow supplies them at build time, so
+# the image carries its own source identity.
+ARG OCI_REVISION
+ARG OCI_SOURCE
+LABEL org.opencontainers.image.revision="${OCI_REVISION}" \
+      org.opencontainers.image.source="${OCI_SOURCE}"
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/opt/matchpulse

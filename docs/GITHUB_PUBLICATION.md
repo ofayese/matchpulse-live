@@ -36,7 +36,7 @@ matchpulse-live/
 ├── docs/                    # architecture, challenge alignment, deployment, publication
 ├── submission/              # pitch, project description, demo script, checklist
 ├── infra/                   # Bicep template, parameters example, validation scripts
-└── .github/workflows/       # challenge-ci.yml, publish-container.yml, azure-deploy.yml
+└── .github/workflows/       # challenge-ci.yml, release-attest.yml, azure-deploy.yml
 ```
 
 The repository contains exactly one root commit. It does not contain the
@@ -70,79 +70,103 @@ The workflow stores no plaintext secret and uses no secret at all.
 requests that touch `infra/`. Its deployment job is inert (`if: false`) until
 the Azure configuration described in `docs/AZURE_DEPLOYMENT.md` exists.
 
-### Container publication workflow
+### Release and attestation workflow
 
-`.github/workflows/publish-container.yml` publishes the container image to the
-GitHub Container Registry. It is a separate gate from the independent audit and
-runs only on `workflow_dispatch`.
+`.github/workflows/release-attest.yml` is the only workflow that publishes a
+container image and the only workflow that creates a release attestation. It
+runs only on `workflow_dispatch` and only on the `remediation/pebble-removal`
+branch.
 
 | Control | Value |
 | ------- | ----- |
-| Trigger | `workflow_dispatch` with an explicit full commit SHA |
-| Permissions | `permissions: contents: read` and `permissions: packages: write` |
-| Authentication | The repository `GITHUB_TOKEN` only |
-| Vulnerability gate | Trivy `0.76.0`, `--severity HIGH,CRITICAL --exit-code 1`, before any login or push |
-| Tag | `ghcr.io/ofayese/matchpulse-live:sha-<full-commit-sha>` |
-| Published refs | The commit-scoped tag only |
+| Trigger | `workflow_dispatch` on `remediation/pebble-removal` |
+| Permissions | `contents: read`, `packages: write`, `id-token: write`, `attestations: write` |
+| Authentication | The repository `GITHUB_TOKEN` only, and only after the scan passes |
+| Vulnerability gate | Trivy pinned by digest, `--severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed=false --ignorefile /dev/null` |
+| Tag | `ghcr.io/ofayese/matchpulse-live:<full-commit-sha>` |
+| Published refs | The immutable full-SHA tag only |
+| Attestation | `actions/attest` v4, SLSA build provenance, signed by GitHub in the same run |
+| Final approval | The protected `release-attestation` environment |
+
+The release commit is the commit that carries the workflow file itself, so the
+source tree, the OCI revision label, the immutable tag and the attestation
+source identity are always the same commit. Nothing is taken from a workflow
+input, a tag, or a mutable image reference.
 
 The order of operations is fixed and fail-closed:
 
-1. The requested input is verified to be a full 40-character lowercase
-   hexadecimal SHA.
-2. The repository is checked out at exactly that SHA and `git rev-parse HEAD` is
-   re-verified against the input.
+1. The exact workflow and source commit is checked out, and the checkout is
+   re-verified against the dispatched commit with a clean working tree.
+2. Every source gate runs: byte-compile, Ruff, pytest, coverage, preflight,
+   solution validation, Bicep build and lint, and Compose validation.
 3. The image is built locally with `push: false` and loaded into the runner.
-4. That exact image is scanned with Trivy `0.76.0` and
-   `--severity HIGH,CRITICAL --exit-code 1`. Any HIGH or CRITICAL finding
-   fails the job.
+4. That exact image is scanned with Trivy and
+   `--severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed=false
+   --ignorefile /dev/null`. No ignore file, skip file, skip directory, VEX
+   document or ignore-unfixed mode is used, and no severity is downgraded.
 5. Only after the scan passes does the workflow log in to GHCR and push the
-   scanned image under the commit-scoped tag.
+   scanned image under the immutable full-SHA tag.
+6. The immutable digest is resolved from the registry.
+7. `actions/attest` v4 signs the SLSA build provenance of that digest with
+   the GitHub OIDC identity and pushes the attestation to the registry.
+8. The attestation is verified publicly against the Sigstore trusted root,
+   the exact signer workflow, the exact signer commit, the exact source ref
+   and the exact source commit.
+9. The published digest is pulled anonymously with a credential-free Docker
+   configuration, and the application package inside the published image is
+   compared byte for byte with the checked out source.
+10. The published digest is scanned again with the same unsuppressed gate.
+11. The published digest is started with the release hardening applied
+    (no network, non-root user, read-only root filesystem, no capabilities,
+    bounded process and memory limits) and is exercised from inside the
+    container.
+12. The final digest, the attestation identifier and the verification output
+    are handed to the independent auditor as run evidence.
+13. The protected `release-attestation` environment gates the final approval.
+    The job re-verifies the approved digest and its attestation before the
+    release is recorded, so the human approval is always given after the
+    independent final-digest audit.
 
-The vulnerability gate is never skipped, never reordered after the push, and
-never made non-blocking. There is no `.trivyignore`, no `--ignore-unfixed`
-mode, no blanket CVE exception, no severity downgrade, and no
-`continue-on-error` on the scan step. The only `continue-on-error` step is the
-best-effort request for public package visibility, which runs after the image
-is already published and cannot affect what was pushed.
-
-The workflow never publishes `latest`, `main`, `stable`, or a tag that does not
-match the audited commit. The resulting registry digest is written to the job
-summary.
+There is no hand written attestation, no self authored JSON predicate and no
+post-hoc assertion in this repository. The attestation is produced by
+`actions/attest` itself for the digest that the same run published.
 
 GitHub recommends `GITHUB_TOKEN` for registry workflows associated with the
 repository, so no long-lived registry credential is stored on a developer
 machine, in a Windows environment variable, in a `.env` file, or in a release
 script.
 
-The published image is verified by pulling it anonymously with a
-credential-free Docker configuration and re-running the unsuppressed scan
-before any deployment reference is approved.
-
 ### Published image
 
 | Property | Value |
 | -------- | ----- |
-| Tag | `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071` |
-| Digest | `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` |
-| Immutable reference | `ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` |
-| Source commit | `e8289265dc1920a2f313a9ec45ebf748591a3071` |
-| Publication run | `39475822157` |
+| Tag | `ghcr.io/ofayese/matchpulse-live:sha-68409d3b82159164c7efb5172213cc3ce55cbe70` |
+| Digest | `sha256:90ce4db3a1d61b62aa12c4009def817643f8378bf7c49c15a2f771af469b5268` |
+| Immutable reference | `ghcr.io/ofayese/matchpulse-live@sha256:90ce4db3a1d61b62aa12c4009def817643f8378bf7c49c15a2f771af469b5268` |
+| Source commit | `68409d3b82159164c7efb5172213cc3ce55cbe70` |
+| Publication run | `39506525775` |
 | Platform | `linux/amd64` |
 | Runtime user | `10001:10001` |
 | Entry point | `/usr/bin/python3.12 -m uvicorn` |
 
-The image was pulled back with a Docker configuration that contains no
-credential at all (`{"auths":{}}`) and the pull succeeded, which proves the
-package is anonymously readable. The pulled image was re-scanned with Trivy
-`0.76.0` and `--severity HIGH,CRITICAL --exit-code 1`: **0 HIGH, 0 CRITICAL**
-(26 findings in total: 22 MEDIUM, 4 LOW). It was then started with a
-read-only root filesystem, a 32M `/tmp` tmpfs, all Linux capabilities dropped,
-and `no-new-privileges`; it reported `healthy` and passed every smoke-test
-check with 0 failures.
+This image was published with the build step's provenance generation disabled,
+so the registry carries **no build provenance attestation** for it and the
+image carries no OCI revision label. The digest, the source binding and the
+runtime behaviour were verified independently: the image was pulled back with
+a Docker configuration that contains no credential at all, the application
+package inside it is byte identical to the source commit, it was re-scanned
+with the blocking Trivy gate, and it passed the hardened smoke test with 0
+failed checks. The `release-attest` workflow above replaces this image with an
+attested one that carries its own build provenance.
+
+The earlier publication
+`ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071`
+(digest `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90`)
+is superseded.
 
 ```bash
 docker run --rm -p 8080:8080 \
-  ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
+  ghcr.io/ofayese/matchpulse-live@sha256:90ce4db3a1d61b62aa12c4009def817643f8378bf7c49c15a2f771af469b5268
 ```
 
 ---
