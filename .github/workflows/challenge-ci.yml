@@ -205,7 +205,7 @@ jobs:
             '{image: $image, imageDigest: $imageDigest, schemaVersion: 1, sourceCommit: $sourceCommit, sourceRepository: $sourceRepository}' \
             > predicate.json
           sha256sum predicate.json | cut -d' ' -f1 > predicate.sha256
-          cat predicate.sha256 >> "$GITHUB_OUTPUT"
+          echo "predicate_sha256=$(cat predicate.sha256)" >> "$GITHUB_OUTPUT"
           cat predicate.json
 
       - name: Validate the release predicate
