@@ -32,18 +32,9 @@ template. It uses **no real match data**: every event is synthetic.
 
 ## Quick start
 
-Run the published image - no build, no setup, no credential:
-
-```bash
-docker run --rm -p 8080:8080 \
-  ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
-```
-
-Then open `http://127.0.0.1:8080/demo`, select an audience, and click
-**Start synthetic demo**. The image is the audited build of source commit
-`e8289265dc1920a2f313a9ec45ebf748591a3071`; it is anonymously pullable, runs
-as the non-root user `10001:10001` on `linux/amd64`, and was scanned with 0
-HIGH and 0 CRITICAL findings before publication.
+The release image digest is pending successful protected release publication.
+Use the local synthetic-only workflow below until that protected release is
+complete.
 
 Or run it from source:
 

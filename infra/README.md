@@ -29,12 +29,12 @@ az deployment group create \
   --resource-group <approved-resource-group> \
   --template-file infra/main.bicep \
   --parameters prefix=matchpulse \
-  --parameters image=ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
+  --parameters 'image=<image-name>@sha256:<digest-from-protected-release>'
 ```
 
 `main.parameters.example.json` holds the same non-secret parameter set with a
-placeholder digest. The digest above is the audited, published image for
-source commit `e8289265dc1920a2f313a9ec45ebf748591a3071`.
+placeholder digest. The release image digest is pending successful protected
+release publication.
 
 ## Foundry
 

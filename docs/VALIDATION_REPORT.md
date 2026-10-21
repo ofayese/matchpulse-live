@@ -57,25 +57,15 @@
   template contains no hardcoded subscription id, no hardcoded tenant id, and
   no secret literal. Four non-blocking warning codes remain (`BCP187`,
   `BCP081`, `BCP318`, `BCP422`).
-- Remote CI: the `challenge-ci` workflow was dispatched for the exact commit
-  `59dccafac618d9d2f3f0c1dc1d491ddec4ae537b` (run `39470530806`) and passed.
-  The push to `main` for the published commit
-  `e8289265dc1920a2f313a9ec45ebf748591a3071` also passed (run `39475810224`).
+- Remote CI: earlier `challenge-ci` and `azure-deploy` validation runs passed.
 - Infrastructure validation: `azure-deploy` failed for the published commit
   because the workflow referenced an action repository that does not exist.
   The workflow now installs the pinned Bicep CLI `0.48.1` explicitly, and the
   runs for the follow-up commit `c1177ca` passed - `azure-deploy` run
   `39476696692` and `challenge-ci` run `39476696757`.
-- Container publication: `publish-container.yml` run `39475822157` published
-  `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071`
-  with digest
-  `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90`.
-  The blocking Trivy gate ran before the login and push step and passed. The
-  image was pulled back anonymously with a credential-free Docker
-  configuration, re-scanned at 0 HIGH and 0 CRITICAL, and passed the smoke
-  test with 0 failed checks as a hardened container (`linux/amd64`, user
-  `10001:10001`, read-only root filesystem, 32M `/tmp`, all capabilities
-  dropped, `no-new-privileges`, health `healthy`).
+- Container publication: the current release image digest is pending
+  successful protected release publication. Historical image references are
+  intentionally omitted and are not evidence for the current source.
 
 ## Not verified here
 

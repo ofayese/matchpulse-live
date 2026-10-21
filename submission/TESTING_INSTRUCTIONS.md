@@ -1,40 +1,16 @@
 # Testing instructions for judges
 
-## Run the published image (no setup required)
+## Published release image
 
-The audited image is published to the GitHub Container Registry and is
-readable without any credential:
-
-```bash
-docker run --rm -p 8080:8080 \
-  ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
-```
-
-Then open <http://127.0.0.1:8080/demo>.
-
-| Property | Value |
-| -------- | ----- |
-| Tag | `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071` |
-| Digest | `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` |
-| Source commit | `e8289265dc1920a2f313a9ec45ebf748591a3071` |
-| Runtime user | `10001:10001` |
-| Platform | `linux/amd64` |
+**NO-GO:** The immutable release image digest is pending successful protected
+release publication. Do not use a previous image tag or digest as evidence for
+the current source.
 
 ## Hosted demo
 
-**URL:** `<ADD_AZURE_CONTAINER_APP_URL>/demo`
-
-No login should be required. Keep the deployment available through the end of judging.
-
-1. Open `/demo`.
-2. Select `fan-en`, `analyst-en`, `broadcaster-es`, or `fan-fr`.
-3. Click **Start synthetic demo**. The server seeds a unique synthetic match,
-   waits for the browser to connect, and streams the moments to the overlay.
-4. Compare the same insight ID and evidence IDs across profiles.
-5. Use the **Comparison language** selector to force `en`, `es`, or `fr` for
-   every audience at once.
-6. Open `/v1/matches/<demo match id>/recap?profile_id=broadcaster-es` after
-   the run finishes. The demo match id is shown in the left panel.
+**NO-GO:** No authoritative Azure Container App URL is available yet. The demo
+URL will be added only after Azure Phase 1 deployment succeeds. Use the local
+synthetic-only validation below in the meantime.
 
 ## Local build
 

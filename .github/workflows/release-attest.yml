@@ -397,7 +397,7 @@ jobs:
   # 16. The protected human approval is a separate, non-publishing job. It
   # waits for the environment reviewer, then revalidates the evidence.
   release-approval:
-    name: Independent audit and protected release approval
+    name: Protected release evidence approval
     if: >-
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/remediation/pebble-removal'
