@@ -162,6 +162,16 @@ jobs:
             --repository "${RELEASE_IMAGE_REPOSITORY}" \
             --digest "${RELEASE_IMAGE_DIGEST}"
 
+      # The published image is exercised with the release hardening applied
+      # before any attestation is created. The container runs without a
+      # network, as a non-root user, with a read-only root filesystem, without
+      # Linux capabilities and with bounded process and memory limits, no host
+      # port is published, and the test removes the container it created.
+      - name: Run the hardened smoke test against the published image
+        run: |
+          set -euo pipefail
+          python3 scripts/hardened_smoke_test.py --image "${RELEASE_IMAGE_NAME}@${RELEASE_IMAGE_DIGEST}"
+
       # The source binding is established independently of the attestation that
       # is about to be created. The automatic workflow token is used only for
       # read-only GitHub API calls. It is never sent to the registry and it is

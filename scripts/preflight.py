@@ -16,6 +16,7 @@ REQUIRED = [
     "src/matchpulse/service.py", "src/matchpulse/synthetic.py", "src/matchpulse/foundry.py",
     "infra/main.bicep", "infra/main.parameters.example.json", "infra/validate.sh", "infra/validate.ps1",
     "scripts/preflight.py", "scripts/validate_solution.py", "scripts/smoke_test.py",
+    "scripts/hardened_smoke_test.py", "scripts/verify_release_binding.py",
     "scripts/bootstrap.sh", "scripts/bootstrap.ps1",
     ".github/workflows/challenge-ci.yml", ".github/workflows/azure-deploy.yml",
     ".github/workflows/publish-container.yml",
