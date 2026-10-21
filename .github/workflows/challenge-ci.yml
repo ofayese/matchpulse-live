@@ -89,3 +89,35 @@ jobs:
 
       - name: Compose configuration
         run: docker compose -f compose.challenge.yml config
+  attest-release:
+    name: Attest release image binding
+    runs-on: ubuntu-latest
+    needs: [container]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: 68409d3b82159164c7efb5172213cc3ce55cbe70
+
+      - name: Generate release binding predicate
+        run: |
+          set -euo pipefail
+          jq -nS \
+            --arg image "ghcr.io/ofayese/matchpulse-live@sha256:90ce4db3a1d61b62aa12c4009def817643f8378bf7c49c15a2f771af469b5268" \
+            --arg releaseCommit "68409d3b82159164c7efb5172213cc3ce55cbe70" \
+            --arg repository "https://github.com/ofayese/matchpulse-live" \
+            '{image: $image, releaseCommit: $releaseCommit, repository: $repository, schemaVersion: 1}' > predicate.json
+          jq -e . predicate.json >/dev/null
+
+      - name: Create custom in-toto attestation
+        uses: actions/attest@v1
+        with:
+          subject-name: ghcr.io/ofayese/matchpulse-live
+          subject-digest: sha256:90ce4db3a1d61b62aa12c4009def817643f8378bf7c49c15a2f771af469b5268
+          predicate-type: https://github.com/ofayese/matchpulse-live/attestations/release-binding/v1
+          predicate-path: predicate.json
