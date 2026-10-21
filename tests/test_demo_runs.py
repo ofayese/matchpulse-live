@@ -78,7 +78,18 @@ def test_demo_cooldown_is_enforced():
     app.state.demo_emit_delay_seconds = 0.0
     app.state.demo = DemoRunManager(cooldown_seconds=30.0)
     with TestClient(app) as client:
-        assert client.post("/v1/demo/runs", json={}).status_code == 202
+        first = client.post("/v1/demo/runs", json={})
+        assert first.status_code == 202
+        # The cooldown is only observable once the first run has released its
+        # slot. While that run is still in flight the request is rejected as
+        # busy, so the run is awaited before the cooldown is asserted.
+        status = {}
+        for _ in range(100):
+            status = client.get(f"/v1/demo/runs/{first.json()['run_id']}").json()
+            if status["status"] in {"completed", "failed"}:
+                break
+            time.sleep(0.05)
+        assert status["status"] == "completed", status
         second = client.post("/v1/demo/runs", json={})
         assert second.status_code == 429
         assert "cooldown" in second.json()["detail"]
