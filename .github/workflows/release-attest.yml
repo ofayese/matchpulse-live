@@ -19,17 +19,17 @@ name: release-attest
 #   2. validate that the checked out source is clean;
 #   3. run every source gate;
 #   4. build the image locally with push disabled;
-#   5. scan that exact image and block on any HIGH or CRITICAL finding;
-#   6. only then log in to GHCR;
-#   7. push the already scanned image under the immutable full-SHA tag;
-#   8. resolve the resulting immutable digest;
-#   9. generate build provenance for that digest with actions/attest;
-#  10. verify the attestation publicly;
-#  11. verify an anonymous digest pull and the source binding of the bytes;
-#  12. re-run the unsuppressed scan against the published digest;
-#  13. run the hardened runtime smoke against the published digest;
-#  14. hand the digest to the independent auditor;
-#  15. obtain the protected human approval of the final digest.
+#   5. run the hardened local-image smoke and block on any failed assertion;
+#   6. scan that exact image and block on any HIGH or CRITICAL finding;
+#   7. only then log in to GHCR;
+#   8. push the already scanned image under the immutable full-SHA tag;
+#   9. resolve the resulting immutable digest;
+#  10. generate build provenance for that digest with actions/attest;
+#  11. verify the attestation publicly;
+#  12. verify an anonymous digest pull and the source binding of the bytes;
+#  13. re-run the unsuppressed scan and hardened smoke against the digest;
+#  14. hand the digest and gate evidence to the independent auditor;
+#  15. revalidate the evidence and obtain the protected human approval.
 #
 # The vulnerability gate is never skipped, never reordered after the push and
 # never made non-blocking. The scan passes no ignore file, no skip file, no
@@ -66,7 +66,9 @@ env:
 jobs:
   build-publish-attest:
     name: Build, scan, publish and attest
-    if: github.ref == 'refs/heads/remediation/pebble-removal'
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/remediation/pebble-removal'
     runs-on: ubuntu-24.04
     steps:
       # 1. The exact workflow and source commit is checked out. The automatic
@@ -171,7 +173,10 @@ jobs:
             OCI_REVISION=${{ env.RELEASE_COMMIT }}
             OCI_SOURCE=https://github.com/${{ env.REPOSITORY }}
 
-      # 5. The exact image that will be published is scanned. The scan passes
+      - name: Run hardened smoke against the local image
+        run: python3 scripts/hardened_smoke_test.py --local-image "${CANDIDATE_TAG}"
+
+      # 6. The exact image that will be published is scanned. The scan passes
       # no ignore file, no skip file, no skip directory, no VEX document and
       # no ignore-unfixed mode, and it never downgrades a severity.
       - name: Block on HIGH or CRITICAL vulnerabilities
@@ -190,7 +195,7 @@ jobs:
             --no-progress \
             "${CANDIDATE_TAG}"
 
-      # 6. The registry login happens only after the scan has passed.
+      # 7. The registry login happens only after both local gates have passed.
       - name: Log in to GHCR with the repository GITHUB_TOKEN
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
@@ -198,7 +203,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 7. The image that was scanned is pushed under the immutable full
+      # 8. The image that was scanned is pushed under the immutable full
       # commit SHA tag. No mutable tag is ever published.
       - name: Push the scanned image under the immutable full-SHA tag
         run: |
@@ -208,7 +213,7 @@ jobs:
           docker push "${TAG}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
-      # 8. The immutable digest is resolved from the registry, not from a tag
+      # 9. The immutable digest is resolved from the registry, not from a tag
       # that could still move.
       - name: Resolve the immutable digest
         id: digest
@@ -227,7 +232,7 @@ jobs:
           echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
           echo "The published image is ${IMAGE_NAME}@${DIGEST}"
 
-      # 9. GitHub signs the build provenance of the published digest in this
+      # 10. GitHub signs the build provenance of the published digest in this
       # same run. The attestation is produced by actions/attest itself. No
       # attestation document is authored, assembled or uploaded by this
       # repository.
@@ -239,7 +244,7 @@ jobs:
           subject-digest: ${{ steps.digest.outputs.digest }}
           push-to-registry: true
 
-      # 10. The attestation is verified publicly, against the Sigstore trusted
+      # 11. The attestation is verified publicly, against the Sigstore trusted
       # root, the exact signer workflow, the exact signer commit, the exact
       # source ref and the exact source commit.
       - name: Verify the attestation publicly
@@ -284,7 +289,7 @@ jobs:
           jq -e '.[0].verificationResult.verifiedTimestamps | length > 0' verification.json > /dev/null
           echo "The release attestation is a verified GitHub build provenance attestation."
 
-      # 11. The published digest is pulled anonymously, with a Docker
+      # 12. The published digest is pulled anonymously, with a Docker
       # configuration that holds no credential at all, and the application
       # package inside the published image is compared byte for byte with the
       # checked out source.
@@ -314,7 +319,7 @@ jobs:
           fi
           echo "The published application package is byte identical to ${RELEASE_COMMIT}."
 
-      # 12. The published digest is scanned again, with the same unsuppressed
+      # 13. The published digest is scanned again, with the same unsuppressed
       # settings, so the artifact that is attested is the artifact that was
       # scanned.
       - name: Rescan the published digest
@@ -333,15 +338,15 @@ jobs:
             --no-progress \
             "${IMAGE_NAME}@${{ steps.digest.outputs.digest }}"
 
-      # 13. The published digest is started with the release hardening applied
+      # 14. The published digest is started with the release hardening applied
       # and is exercised from inside the container, with no network and no
       # published host port.
       - name: Run the hardened runtime smoke against the published digest
         run: |
           set -euo pipefail
-          python3 scripts/hardened_smoke_test.py --image "${IMAGE_NAME}@${{ steps.digest.outputs.digest }}"
+          python3 scripts/hardened_smoke_test.py --published-image "${IMAGE_NAME}@${{ steps.digest.outputs.digest }}"
 
-      # 14. The final digest is handed to the independent auditor as run
+      # 15. The final digest is handed to the independent auditor as run
       # evidence, in the job summary and as a downloadable artifact.
       - name: Hand the digest to the independent auditor
         env:
@@ -361,6 +366,7 @@ jobs:
             --arg predicateType "${PREDICATE_TYPE}" \
             '{attestationId: $attestationId, attestationUrl: $attestationUrl, commit: $commit,
               digest: $digest, image: $image, predicateType: $predicateType, repository: $repository,
+              localSmokePassed: true, localScanPassed: true, publishedScanPassed: true, publishedSmokePassed: true,
               tag: $tag}' > release-evidence.json
           cp verification.json release-verification.json
           {
@@ -372,6 +378,10 @@ jobs:
             echo "- Attestation id: \`${ATTESTATION_ID}\`"
             echo "- Attestation url: ${ATTESTATION_URL}"
             echo "- Predicate type: \`${PREDICATE_TYPE}\`"
+            echo "- Local hardened smoke: passed"
+            echo "- Local Trivy scan: passed"
+            echo "- Published digest Trivy scan: passed"
+            echo "- Published digest hardened smoke: passed"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the release evidence
@@ -384,14 +394,13 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-  # 15. The protected human approval of the final digest. The job starts only
-  # after the required reviewers approve the deployment in the protected
-  # environment, and it re-verifies the digest, the attestation and the source
-  # binding before the release is recorded. The approval is therefore always
-  # given after the independent final-digest audit.
+  # 16. The protected human approval is a separate, non-publishing job. It
+  # waits for the environment reviewer, then revalidates the evidence.
   release-approval:
     name: Independent audit and protected release approval
-    if: github.ref == 'refs/heads/remediation/pebble-removal'
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/remediation/pebble-removal'
     needs: [build-publish-attest]
     runs-on: ubuntu-24.04
     environment: release-attestation
@@ -410,6 +419,35 @@ jobs:
         with:
           name: release-evidence
           path: evidence
+
+      - name: Revalidate commit, digest and gate evidence
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${RELEASE_COMMIT}"
+          jq -e --arg commit "${RELEASE_COMMIT}" \
+            '.commit == $commit and (.digest | test("^sha256:[0-9a-f]{64}$")) and
+             .localSmokePassed == true and .localScanPassed == true and
+             .publishedScanPassed == true and .publishedSmokePassed == true and
+             .repository == "ofayese/matchpulse-live" and
+             .image == "ghcr.io/ofayese/matchpulse-live" and
+             .tag == ("ghcr.io/ofayese/matchpulse-live:" + $commit) and
+             (.attestationId | type == "string" and length > 0) and
+             (.attestationUrl | type == "string" and startswith("https://")) and
+             .predicateType == "https://slsa.dev/provenance/v1"' evidence/release-evidence.json
+          jq -e --arg digest "$(jq -r '.digest' evidence/release-evidence.json)" \
+            'length == 1 and .[0].verificationResult.statement.subject[0].digest.sha256 == ($digest | sub("^sha256:"; ""))' \
+            evidence/release-verification.json
+
+      - name: Re-run the published digest scan and hardened smoke
+        run: |
+          set -euo pipefail
+          DIGEST="$(jq -r '.digest' evidence/release-evidence.json)"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v trivy-cache:/root/.cache/trivy "${TRIVY_IMAGE}" image \
+            --scanners vuln --vuln-type os,library --severity HIGH,CRITICAL \
+            --exit-code 1 --ignore-unfixed=false --ignorefile /dev/null --no-progress \
+            "${IMAGE_NAME}@${DIGEST}"
+          python3 scripts/hardened_smoke_test.py --published-image "${IMAGE_NAME}@${DIGEST}"
 
       - name: Re-verify the approved digest and its attestation
         env:

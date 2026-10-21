@@ -60,6 +60,7 @@ parent program's history.
 | Coverage | `python -m pytest --cov=matchpulse --cov-report=term-missing --cov-fail-under=80` |
 | Preflight | `python scripts/preflight.py` |
 | Solution validation | `python scripts/validate_solution.py` |
+| Phase A2 release contract | `python scripts/audit_release_workflow.py .github/workflows/release-attest.yml` |
 | Container build | `docker build -t matchpulse-live:ci .` |
 | Vulnerability gate | Trivy `0.76.0`, `--severity HIGH,CRITICAL --exit-code 1` |
 | Compose validation | `docker compose -f compose.challenge.yml config` |
@@ -99,33 +100,34 @@ The order of operations is fixed and fail-closed:
    re-verified against the dispatched commit with a clean working tree.
 2. Every source gate runs: byte-compile, Ruff, pytest, coverage, preflight,
    solution validation, Bicep build and lint, and Compose validation.
-3. The image is built locally with `push: false` and loaded into the runner.
-4. That exact image is scanned with Trivy and
+3. The image is built locally exactly once with `push: false` and loaded into the runner.
+4. The local image passes the hardened runtime smoke, including synthetic module `--help` and seeded-run checks.
+5. That exact image is scanned with Trivy and
    `--severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed=false
    --ignorefile /dev/null`. No ignore file, skip file, skip directory, VEX
    document or ignore-unfixed mode is used, and no severity is downgraded.
-5. Only after the scan passes does the workflow log in to GHCR and push the
+6. Only after both local gates pass does the workflow log in to GHCR and push the
    scanned image under the immutable full-SHA tag.
-6. The immutable digest is resolved from the registry.
-7. `actions/attest` v4 signs the SLSA build provenance of that digest with
+7. The immutable digest is resolved from the registry.
+8. `actions/attest` v4 signs the SLSA build provenance of that digest with
    the GitHub OIDC identity and pushes the attestation to the registry.
-8. The attestation is verified publicly against the Sigstore trusted root,
+9. The attestation is verified publicly against the Sigstore trusted root,
    the exact signer workflow, the exact signer commit, the exact source ref
    and the exact source commit.
-9. The published digest is pulled anonymously with a credential-free Docker
+10. The published digest is pulled anonymously with a credential-free Docker
    configuration, and the application package inside the published image is
    compared byte for byte with the checked out source.
-10. The published digest is scanned again with the same unsuppressed gate.
-11. The published digest is started with the release hardening applied
+11. The published digest is scanned again with the same unsuppressed gate.
+12. The published digest is started with the release hardening applied
     (no network, non-root user, read-only root filesystem, no capabilities,
     bounded process and memory limits) and is exercised from inside the
     container.
-12. The final digest, the attestation identifier and the verification output
+13. The final digest, the attestation identifier, scan results and smoke results
     are handed to the independent auditor as run evidence.
-13. The protected `release-attestation` environment gates the final approval.
-    The job re-verifies the approved digest and its attestation before the
-    release is recorded, so the human approval is always given after the
-    independent final-digest audit.
+14. The separate `release-approval` job enters the protected `release-attestation`
+    environment only after the publishing job hands off its evidence. Once the
+    reviewer approves, it rechecks the SHA, evidence, attestation, scan and
+    smoke before recording approval. It does not rebuild or publish.
 
 There is no hand written attestation, no self authored JSON predicate and no
 post-hoc assertion in this repository. The attestation is produced by
@@ -135,39 +137,6 @@ GitHub recommends `GITHUB_TOKEN` for registry workflows associated with the
 repository, so no long-lived registry credential is stored on a developer
 machine, in a Windows environment variable, in a `.env` file, or in a release
 script.
-
-### Published image
-
-| Property | Value |
-| -------- | ----- |
-| Tag | `ghcr.io/ofayese/matchpulse-live:sha-68409d3b82159164c7efb5172213cc3ce55cbe70` |
-| Digest | `sha256:90ce4db3a1d61b62aa12c4009def817643f8378bf7c49c15a2f771af469b5268` |
-| Immutable reference | `ghcr.io/ofayese/matchpulse-live@sha256:90ce4db3a1d61b62aa12c4009def817643f8378bf7c49c15a2f771af469b5268` |
-| Source commit | `68409d3b82159164c7efb5172213cc3ce55cbe70` |
-| Publication run | `39506525775` |
-| Platform | `linux/amd64` |
-| Runtime user | `10001:10001` |
-| Entry point | `/usr/bin/python3.12 -m uvicorn` |
-
-This image was published with the build step's provenance generation disabled,
-so the registry carries **no build provenance attestation** for it and the
-image carries no OCI revision label. The digest, the source binding and the
-runtime behaviour were verified independently: the image was pulled back with
-a Docker configuration that contains no credential at all, the application
-package inside it is byte identical to the source commit, it was re-scanned
-with the blocking Trivy gate, and it passed the hardened smoke test with 0
-failed checks. The `release-attest` workflow above replaces this image with an
-attested one that carries its own build provenance.
-
-The earlier publication
-`ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071`
-(digest `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90`)
-is superseded.
-
-```bash
-docker run --rm -p 8080:8080 \
-  ghcr.io/ofayese/matchpulse-live@sha256:90ce4db3a1d61b62aa12c4009def817643f8378bf7c49c15a2f771af469b5268
-```
 
 ---
 

@@ -14,7 +14,7 @@
 
 ## 0:28-0:48 - Live synthetic ingestion
 
-**Screen:** Terminal starts `matchpulse-synthetic --delay .15`; browser is connected as `fan-en`.
+**Screen:** Terminal starts `python -m matchpulse.synthetic --delay .15`; browser is connected as `fan-en`.
 
 **Voice:** "This seeded producer emits only synthetic passes, shots, tackles, pressure, possession, and goals. The service accepts events in sequence, ignores duplicates, and pushes timed overlays over WebSocket."
 

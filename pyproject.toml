@@ -29,7 +29,6 @@ azure = [
 
 [project.scripts]
 matchpulse = "matchpulse.__main__:main"
-matchpulse-synthetic = "matchpulse.synthetic:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

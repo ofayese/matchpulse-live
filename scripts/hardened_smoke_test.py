@@ -1,7 +1,8 @@
 """Hardened smoke test of the published MatchPulse Live image.
 
 Usage:
-    python scripts/hardened_smoke_test.py --image <registry>/<repository>@sha256:<digest>
+    python scripts/hardened_smoke_test.py --local-image <local-tag-or-id>
+    python scripts/hardened_smoke_test.py --published-image <name>@sha256:<digest>
 
 The image is started with the release hardening applied: no network, a
 non-root user, a read-only root filesystem, no Linux capabilities, a small
@@ -309,6 +310,11 @@ def run_container_checks(name: str, interpreter: str) -> None:
 
 def run_synthetic_client(name: str, interpreter: str, events: int, seed: int) -> None:
     """Stream a seeded synthetic match into the running service from inside the container."""
+    help_result = docker(["exec", name, interpreter, "-m", "matchpulse.synthetic", "--help"])
+    help_output = help_result.stdout if isinstance(help_result.stdout, str) else help_result.stdout.decode("utf-8", "replace")
+    check("the synthetic module help command succeeds", help_result.returncode == 0, help_output[:200])
+    if help_result.returncode != 0:
+        raise SmokeError("the synthetic module help command failed")
     completed = docker(
         [
             "exec", name, interpreter, "-m", "matchpulse.synthetic",
@@ -351,13 +357,14 @@ def review_log(name: str) -> None:
     check("the container log references no external endpoint", not external, " | ".join(external[:5]))
 
 
-def run(image: str, events: int, seed: int) -> int:
+def run(image: str, events: int, seed: int, *, pull: bool) -> int:
     """Start the hardened container, exercise it, review its log and remove it."""
     name = f"mp-hardened-smoke-{uuid.uuid4().hex[:8]}"
-    docker(["rm", "-f", name])
+    if pull:
+        docker_text(["pull", image])
     started = docker(
         [
-            "run", "-d", "--name", name,
+            "run", "--pull=never", "-d", "--name", name,
             "--network", "none",
             "--user", RUNTIME_USER,
             "--read-only",
@@ -391,15 +398,19 @@ def run(image: str, events: int, seed: int) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Hardened smoke test of the published MatchPulse Live image.")
-    parser.add_argument("--image", required=True, help="The immutable image reference to test.")
+    parser = argparse.ArgumentParser(description="Hardened smoke test of a MatchPulse Live image.")
+    modes = parser.add_mutually_exclusive_group(required=True)
+    modes.add_argument("--local-image", help="A local Docker tag or image ID. This mode never pulls.")
+    modes.add_argument("--published-image", help="A published image reference pinned to a sha256 digest.")
     parser.add_argument("--events", type=int, default=5, help="The number of synthetic events to stream.")
     parser.add_argument("--seed", type=int, default=27, help="The synthetic match seed.")
     arguments = parser.parse_args()
-    if "@sha256:" not in arguments.image:
-        fail("the image reference must be pinned to a sha256 digest")
+    image = arguments.local_image or arguments.published_image
+    published = arguments.published_image is not None
+    if published and not re.search(r"@sha256:[0-9a-f]{64}$", image):
+        fail("--published-image must be pinned to a full lowercase sha256 digest")
     try:
-        return run(arguments.image, arguments.events, arguments.seed)
+        return run(image, arguments.events, arguments.seed, pull=published)
     except SmokeError as error:
         fail(str(error))
     return 0

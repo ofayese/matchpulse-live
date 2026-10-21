@@ -127,7 +127,7 @@ python -m pip install -e ".[azure]"
 | Purpose | Command |
 | ------- | ------- |
 | FastAPI service | `uvicorn matchpulse.service:app --host 127.0.0.1 --port 8080` |
-| Synthetic producer | `matchpulse-synthetic --url http://127.0.0.1:8080 --delay 0.15 --events 50` |
+| Synthetic producer | `python -m matchpulse.synthetic --url http://127.0.0.1:8080 --delay 0.15 --events 50` |
 | Test suite | `python -m pytest -q` |
 | Coverage gate | `python -m pytest --cov=matchpulse --cov-report=term-missing --cov-fail-under=80` |
 | Static checks | `python -m ruff check src tests scripts` |

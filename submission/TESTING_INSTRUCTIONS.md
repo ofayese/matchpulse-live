@@ -51,7 +51,7 @@ uvicorn matchpulse.service:app --host 127.0.0.1 --port 8080
 In a second terminal:
 
 ```bash
-matchpulse-synthetic --delay .15 --events 50
+python -m matchpulse.synthetic --delay .15 --events 50
 ```
 
 Open `http://127.0.0.1:8080/demo`.

@@ -54,6 +54,9 @@ jobs:
       - name: Visual Studio solution validation
         run: python scripts/validate_solution.py
 
+      - name: Phase A2 release workflow audit
+        run: python scripts/audit_release_workflow.py .github/workflows/release-attest.yml
+
   container:
     name: Container build
     runs-on: ubuntu-latest

@@ -60,7 +60,7 @@ uvicorn matchpulse.service:app --host 127.0.0.1 --port 8080
 In a second terminal, stream a match:
 
 ```bash
-matchpulse-synthetic --url http://127.0.0.1:8080 --delay 0.15 --events 50
+python -m matchpulse.synthetic --url http://127.0.0.1:8080 --delay 0.15 --events 50
 ```
 
 Then open `http://127.0.0.1:8080/demo`, select an audience, and click
@@ -103,7 +103,7 @@ interpreter setup, the required workload, and the command-line fallback.
 curl -s http://127.0.0.1:8080/health/live
 curl -s http://127.0.0.1:8080/health/ready
 curl -s http://127.0.0.1:8080/v1/profiles
-matchpulse-synthetic --jsonl --events 5 > data/demo-match.jsonl
+python -m matchpulse.synthetic --jsonl --events 5 > data/demo-match.jsonl
 ```
 
 Key routes:
