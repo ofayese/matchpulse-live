@@ -6,7 +6,7 @@ import pytest
 
 # Add scripts directory to path to import validator
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-from validate_attestation_verification import validate_attestation
+
 
 # Constants for tests
 SUBJECT_NAME = "ghcr.io/ofayese/matchpulse-live"

@@ -2,6 +2,7 @@ import argparse
 import json
 import sys
 
+
 def validate_attestation(data, subject_name, subject_digest, commit):
     """
     Validates the attestation verification JSON.
