@@ -284,8 +284,7 @@ jobs:
                and (.[0].verificationResult.statement.subject[0].name == $name)
                and (.[0].verificationResult.statement.subject[0].digest.sha256 == $sha256)' verification.json > /dev/null
           jq -e --arg commit "${RELEASE_COMMIT}" \
-            '[.[0].verificationResult.statement.predicate.buildDefinition.externalParameters.source | tostring]
-               | any(contains($commit))' verification.json > /dev/null
+            'any(.[0].verificationResult.statement.predicate.buildDefinition.resolvedDependencies[]?; .digest.gitCommit? == $commit)' verification.json > /dev/null
           jq -e '.[0].verificationResult.verifiedTimestamps | length > 0' verification.json > /dev/null
           echo "The release attestation is a verified GitHub build provenance attestation."
 
