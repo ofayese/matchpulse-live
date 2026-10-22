@@ -7,34 +7,20 @@ readable without any credential:
 
 ```bash
 docker run --rm -p 8080:8080 \
-  ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
+  ghcr.io/ofayese/matchpulse-live@<FINAL_IMAGE_DIGEST>
 ```
 
 Then open <http://127.0.0.1:8080/demo>.
 
 | Property | Value |
 | -------- | ----- |
-| Tag | `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071` |
-| Digest | `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` |
-| Source commit | `e8289265dc1920a2f313a9ec45ebf748591a3071` |
+| Tag | `challenge-2026-submission` |
+| Digest | `<FINAL_IMAGE_DIGEST>` |
+| Source commit | `055392dfd53ad136c4fa0cc62659538e35da02cf` |
 | Runtime user | `10001:10001` |
 | Platform | `linux/amd64` |
 
-## Hosted demo
 
-**URL:** `<ADD_AZURE_CONTAINER_APP_URL>/demo`
-
-No login should be required. Keep the deployment available through the end of judging.
-
-1. Open `/demo`.
-2. Select `fan-en`, `analyst-en`, `broadcaster-es`, or `fan-fr`.
-3. Click **Start synthetic demo**. The server seeds a unique synthetic match,
-   waits for the browser to connect, and streams the moments to the overlay.
-4. Compare the same insight ID and evidence IDs across profiles.
-5. Use the **Comparison language** selector to force `en`, `es`, or `fr` for
-   every audience at once.
-6. Open `/v1/matches/<demo match id>/recap?profile_id=broadcaster-es` after
-   the run finishes. The demo match id is shown in the left panel.
 
 ## Local build
 

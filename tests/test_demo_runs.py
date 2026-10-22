@@ -78,7 +78,15 @@ def test_demo_cooldown_is_enforced():
     app.state.demo_emit_delay_seconds = 0.0
     app.state.demo = DemoRunManager(cooldown_seconds=30.0)
     with TestClient(app) as client:
-        assert client.post("/v1/demo/runs", json={}).status_code == 202
+        first_run = client.post("/v1/demo/runs", json={})
+        assert first_run.status_code == 202
+        # Wait for the run to complete to release the lock
+        for _ in range(100):
+            status = client.get(f"/v1/demo/runs/{first_run.json()['run_id']}").json()
+            if status["status"] in {"completed", "failed"}:
+                break
+            time.sleep(0.05)
+
         second = client.post("/v1/demo/runs", json={})
         assert second.status_code == 429
         assert "cooldown" in second.json()["detail"]

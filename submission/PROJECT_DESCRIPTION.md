@@ -14,6 +14,6 @@ MatchPulse Live uses only seeded synthetic data. The public demo contains no rea
 
 **Public repository:** <https://github.com/ofayese/matchpulse-live>
 
-**Published container image:** `ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` (source commit `e8289265dc1920a2f313a9ec45ebf748591a3071`, `linux/amd64`, non-root user `10001:10001`). The image is anonymously pullable, was scanned with 0 HIGH and 0 CRITICAL findings, and passed the smoke test with 0 failed checks.
+**Published container image:** `ghcr.io/ofayese/matchpulse-live@<FINAL_IMAGE_DIGEST>` (source commit `055392dfd53ad136c4fa0cc62659538e35da02cf`, `linux/amd64`, non-root user `10001:10001`). The image is anonymously pullable, was scanned with 0 HIGH and 0 CRITICAL findings, and passed the smoke test with 0 failed checks.
 
 **Microsoft/Azure technologies:** Microsoft Foundry/Azure OpenAI-compatible model endpoint (optional guarded rewrite), Azure Container Apps, Application Insights/Log Analytics, Bicep, GitHub Actions, and GitHub Container Registry.
