@@ -1,0 +1,27 @@
+[
+    {
+        "verificationResult": {
+            "statement": {
+                "subject": [
+                    {
+                        "name": "ghcr.io/ofayese/matchpulse-live",
+                        "digest": {
+                            "sha256": "deadbeef"
+                        }
+                    }
+                ],
+                "predicate": {
+                    "buildDefinition": {
+                        "resolvedDependencies": [
+                            {
+                                "digest": {
+                                    "gitCommit": "e228610a6d220f5532b0d8d3baac0a629db14208"
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]
