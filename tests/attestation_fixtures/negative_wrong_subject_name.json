@@ -1,0 +1,27 @@
+[
+    {
+        "verificationResult": {
+            "statement": {
+                "subject": [
+                    {
+                        "name": "ghcr.io/ofayese/wrong-repo",
+                        "digest": {
+                            "sha256": "1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c"
+                        }
+                    }
+                ],
+                "predicate": {
+                    "buildDefinition": {
+                        "resolvedDependencies": [
+                            {
+                                "digest": {
+                                    "gitCommit": "e228610a6d220f5532b0d8d3baac0a629db14208"
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]
