@@ -118,6 +118,14 @@ jobs:
         run: |
           {
             echo "### Azure deployment"
-            echo "Resource group: \${{ vars.AZURE_RESOURCE_GROUP }}"
-            echo "Container app: \${{ vars.CONTAINER_APP_NAME }}"
+      - name: Publish summary
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }}
+        run: |
+          {
+            echo "### Azure deployment"
+            echo "Resource group: ${AZURE_RESOURCE_GROUP}"
+            echo "Container app: ${CONTAINER_APP_NAME}"
+          } >> "$GITHUB_STEP_SUMMARY"
           } >> "$GITHUB_STEP_SUMMARY"
