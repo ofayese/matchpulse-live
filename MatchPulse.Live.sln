@@ -25,10 +25,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MatchPulse.Live.Tests", "Ma
 		tests\test_api.py = tests\test_api.py
 		tests\test_foundry_guard.py = tests\test_foundry_guard.py
 		tests\test_foundry_provider.py = tests\test_foundry_provider.py
+		tests\test_hardened_smoke.py = tests\test_hardened_smoke.py
 		tests\test_localization.py = tests\test_localization.py
 		tests\test_personalization.py = tests\test_personalization.py
 		tests\test_pipeline.py = tests\test_pipeline.py
 		tests\test_solution_layout.py = tests\test_solution_layout.py
+		tests\test_workflow_security.py = tests\test_workflow_security.py
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure", "infrastructure", "{5F8240CE-A163-4E9B-D275-60B39EC18F54}"
@@ -47,10 +49,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MatchPulse.Live.Build", "Ma
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\azure-deploy.yml = .github\workflows\azure-deploy.yml
 		.github\workflows\challenge-ci.yml = .github\workflows\challenge-ci.yml
+		.github\workflows\release-attest.yml = .github\workflows\release-attest.yml
 		Dockerfile = Dockerfile
 		compose.challenge.yml = compose.challenge.yml
 		scripts\bootstrap.ps1 = scripts\bootstrap.ps1
 		scripts\bootstrap.sh = scripts\bootstrap.sh
+		scripts\hardened_smoke_test.py = scripts\hardened_smoke_test.py
 		scripts\preflight.py = scripts\preflight.py
 		scripts\smoke_test.py = scripts\smoke_test.py
 		scripts\validate_solution.py = scripts\validate_solution.py

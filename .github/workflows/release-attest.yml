@@ -2,48 +2,43 @@ name: release-attest
 
 # Protected release pipeline.
 #
-# This workflow is the only path that publishes a container image and it is the
-# only path that creates a release attestation.
+# This workflow is the only path that publishes a container image with a
+# GitHub build provenance attestation.
 #
-# The image is rebuilt from the exact commit that carries this workflow file,
-# the rebuilt image is scanned before anything is published, the scanned image
-# is published under an immutable full-commit-SHA tag, and GitHub itself signs
-# the build provenance of the resulting digest in the same run.
-#
-# There is no hand written attestation, no self authored JSON predicate and no
-# post-hoc assertion in this repository. The only attestation is the GitHub
-# artifact attestation that actions/attest generates for the published digest.
-#
-# The order of operations is fixed and fail-closed:
-#   1. check out the exact workflow and source commit;
-#   2. validate that the checked out source is clean;
-#   3. run every source gate;
-#   4. build the image locally with push disabled;
-#   5. run the hardened local-image smoke and block on any failed assertion;
-#   6. scan that exact image and block on any HIGH or CRITICAL finding;
-#   7. only then log in to GHCR;
-#   8. push the already scanned image under the immutable full-SHA tag;
-#   9. resolve the resulting immutable digest;
-#  10. generate build provenance for that digest with actions/attest;
-#  11. verify the attestation publicly;
-#  12. verify an anonymous digest pull and the source binding of the bytes;
-#  13. re-run the unsuppressed scan and hardened smoke against the digest;
-#  14. hand the digest and gate evidence to the independent auditor;
-#  15. revalidate the evidence and obtain the protected human approval.
-#
-# The vulnerability gate is never skipped, never reordered after the push and
-# never made non-blocking. The scan passes no ignore file, no skip file, no
-# skip directory, no VEX document and no ignore-unfixed mode, and it never
-# downgrades a severity.
+# Security ordering is fail-closed and gates publication behind human approval:
+#   Job 1 (validate):
+#     - Read-only (contents: read), no registry login, no push, no attestation,
+#       and no Azure mutation.
+#     - Verifies the dispatch ref is refs/heads/main and that the dispatched
+#       commit equals both inputs.expected_commit and the current origin/main tip.
+#     - Runs all Python, Ruff, pytest, coverage, preflight, solution, Bicep and
+#       Compose checks.
+#     - Builds the image locally with push: false and standard OCI build args.
+#     - Verifies standard org.opencontainers.image.revision and
+#       org.opencontainers.image.source labels.
+#     - Runs the hardened container smoke test and unsuppressed Trivy scan.
+#   Job 2 (publish):
+#     - Depends on validate (needs: [validate]).
+#     - Bound directly to environment: release-attestation so human approval
+#       from a distinct reviewer is required BEFORE any registry login, push
+#       or attestation step can start.
+#     - Re-verifies the exact release commit on main after approval, rebuilds
+#       and re-validates locally, logs in to GHCR, pushes only the immutable
+#       full-SHA tag, captures the registry digest, creates and verifies the
+#       SLSA v1 build provenance attestation, verifies anonymous pull and
+#       byte-for-byte source parity, re-runs Trivy and hardened smoke on the
+#       published digest, and uploads release evidence.
 
 on:
   workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: "Full 40-character lowercase SHA of the authorized main commit to publish"
+        required: true
+        type: string
 
 permissions:
   contents: read
-  packages: write
-  id-token: write
-  attestations: write
 
 concurrency:
   group: release-attest-${{ github.ref }}
@@ -53,63 +48,72 @@ env:
   REGISTRY: ghcr.io
   REPOSITORY: ofayese/matchpulse-live
   IMAGE_NAME: ghcr.io/ofayese/matchpulse-live
-  # The release commit is the commit that carries this workflow file. It is
-  # read from the dispatch itself and is re-verified against the checkout, so
-  # the published image, the OCI revision label, the immutable tag and the
-  # attestation source identity are always the same commit.
   RELEASE_COMMIT: ${{ github.sha }}
+  EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+  DISPATCH_REF: ${{ github.ref }}
   CANDIDATE_TAG: matchpulse-live:release-candidate
   TRIVY_IMAGE: aquasec/trivy@sha256:2416d1f74045b57274df1a340eee6b510cacd73c66a6ccb8da092b117eb7d222
   SIGNER_WORKFLOW: ofayese/matchpulse-live/.github/workflows/release-attest.yml
   PREDICATE_TYPE: https://slsa.dev/provenance/v1
 
 jobs:
-  build-publish-attest:
-    name: Build, scan, publish and attest
+  validate:
+    name: Validate release candidate without publishing
     if: >-
       github.event_name == 'workflow_dispatch' &&
-      github.ref == 'refs/heads/remediation/pebble-removal'
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
-      # 1. The exact workflow and source commit is checked out. The automatic
-      # workflow token is not persisted and no registry credential exists yet.
       - name: Check out the release commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      # 2. The checkout must be the dispatched commit and the source tree must
-      # be clean. A dirty tree would mean the published bytes are not the
-      # audited bytes.
-      - name: Validate the clean source
+      - name: Verify the dispatch contract and clean main source
         run: |
           set -euo pipefail
-          HEAD_COMMIT="$(git rev-parse HEAD)"
-          if [ "${#HEAD_COMMIT}" -ne 40 ]; then
-            echo "The release commit must be the full 40 character SHA." >&2
+          if [ "${DISPATCH_REF}" != "refs/heads/main" ]; then
+            echo "Protected release dispatch is permitted only from refs/heads/main (got ${DISPATCH_REF})." >&2
             exit 1
           fi
-          case "${HEAD_COMMIT}" in
-            *[!0-9a-f]*) echo "The release commit must be lowercase hexadecimal." >&2; exit 1 ;;
-          esac
+          for sha_val in "${RELEASE_COMMIT}" "${EXPECTED_COMMIT}"; do
+            if [ "${#sha_val}" -ne 40 ]; then
+              echo "Commit SHA must be a full 40-character SHA." >&2
+              exit 1
+            fi
+            case "${sha_val}" in
+              *[!0-9a-f]*) echo "Commit SHA must be lowercase hexadecimal." >&2; exit 1 ;;
+            esac
+          done
+          if [ "${EXPECTED_COMMIT}" != "${RELEASE_COMMIT}" ]; then
+            echo "Expected commit input ${EXPECTED_COMMIT} does not match dispatched commit ${RELEASE_COMMIT}." >&2
+            exit 1
+          fi
+          HEAD_COMMIT="$(git rev-parse HEAD)"
           if [ "${HEAD_COMMIT}" != "${RELEASE_COMMIT}" ]; then
-            echo "The checkout ${HEAD_COMMIT} does not match the dispatched commit ${RELEASE_COMMIT}." >&2
+            echo "Checkout ${HEAD_COMMIT} does not match dispatched commit ${RELEASE_COMMIT}." >&2
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "${RELEASE_COMMIT}" origin/main; then
+            echo "Release commit ${RELEASE_COMMIT} is not reachable on origin/main." >&2
+            exit 1
+          fi
+          REMOTE_MAIN="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          if [ "${REMOTE_MAIN}" != "${RELEASE_COMMIT}" ]; then
+            echo "Dispatched commit ${RELEASE_COMMIT} is not the current origin/main tip (${REMOTE_MAIN})." >&2
             exit 1
           fi
           if [ -n "$(git status --porcelain)" ]; then
-            echo "The checked out source is not clean." >&2
+            echo "The checked out source tree is not clean." >&2
             git status --porcelain >&2
             exit 1
           fi
           git diff --exit-code
-          if ! git cat-file -e "${HEAD_COMMIT}^{commit}"; then
-            echo "The release commit is not present in the checkout." >&2
-            exit 1
-          fi
-          echo "The release commit is ${HEAD_COMMIT} and the source tree is clean."
+          echo "Verified clean main release commit ${HEAD_COMMIT}."
 
-      # 3. Every source gate runs before a single image layer is built.
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -155,7 +159,6 @@ jobs:
       - name: Validate the Compose configuration
         run: docker compose -f compose.challenge.yml config
 
-      # 4. The image is built locally and is never pushed by the build step.
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
@@ -173,12 +176,21 @@ jobs:
             OCI_REVISION=${{ env.RELEASE_COMMIT }}
             OCI_SOURCE=https://github.com/${{ env.REPOSITORY }}
 
-      - name: Run hardened smoke against the local image
-        run: python3 scripts/hardened_smoke_test.py --local-image "${CANDIDATE_TAG}"
+      - name: Verify standard OCI labels on candidate image
+        run: |
+          set -euo pipefail
+          REV_LABEL="$(docker image inspect "${CANDIDATE_TAG}" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+          SRC_LABEL="$(docker image inspect "${CANDIDATE_TAG}" --format '{{ index .Config.Labels "org.opencontainers.image.source" }}')"
+          test "${REV_LABEL}" = "${RELEASE_COMMIT}"
+          test "${SRC_LABEL}" = "https://github.com/${REPOSITORY}"
 
-      # 6. The exact image that will be published is scanned. The scan passes
-      # no ignore file, no skip file, no skip directory, no VEX document and
-      # no ignore-unfixed mode, and it never downgrades a severity.
+      - name: Run hardened smoke against the local image
+        run: |
+          set -euo pipefail
+          python3 scripts/hardened_smoke_test.py \
+            --local-image "${CANDIDATE_TAG}" \
+            --expected-revision "${RELEASE_COMMIT}"
+
       - name: Block on HIGH or CRITICAL vulnerabilities
         run: |
           set -euo pipefail
@@ -195,7 +207,115 @@ jobs:
             --no-progress \
             "${CANDIDATE_TAG}"
 
-      # 7. The registry login happens only after both local gates have passed.
+  publish:
+    name: Publish and attest approved release
+    needs: [validate]
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: release-attestation
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Check out the release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Re-verify the dispatch contract and immutable main state after approval
+        run: |
+          set -euo pipefail
+          if [ "${DISPATCH_REF}" != "refs/heads/main" ]; then
+            echo "Protected release publication is permitted only from refs/heads/main (got ${DISPATCH_REF})." >&2
+            exit 1
+          fi
+          for sha_val in "${RELEASE_COMMIT}" "${EXPECTED_COMMIT}"; do
+            if [ "${#sha_val}" -ne 40 ]; then
+              echo "Commit SHA must be a full 40-character SHA." >&2
+              exit 1
+            fi
+            case "${sha_val}" in
+              *[!0-9a-f]*) echo "Commit SHA must be lowercase hexadecimal." >&2; exit 1 ;;
+            esac
+          done
+          if [ "${EXPECTED_COMMIT}" != "${RELEASE_COMMIT}" ]; then
+            echo "Expected commit ${EXPECTED_COMMIT} does not match release commit ${RELEASE_COMMIT}." >&2
+            exit 1
+          fi
+          HEAD_COMMIT="$(git rev-parse HEAD)"
+          if [ "${HEAD_COMMIT}" != "${RELEASE_COMMIT}" ]; then
+            echo "Checkout ${HEAD_COMMIT} does not match release commit ${RELEASE_COMMIT}." >&2
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "${RELEASE_COMMIT}" origin/main; then
+            echo "Release commit ${RELEASE_COMMIT} is not reachable on origin/main." >&2
+            exit 1
+          fi
+          REMOTE_MAIN="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          if [ "${REMOTE_MAIN}" != "${RELEASE_COMMIT}" ]; then
+            echo "origin/main moved to ${REMOTE_MAIN} while awaiting approval; refusing to publish ${RELEASE_COMMIT}." >&2
+            exit 1
+          fi
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "The checked out source tree is not clean." >&2
+            git status --porcelain >&2
+            exit 1
+          fi
+          git diff --exit-code
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build the approved image locally with push disabled
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          provenance: false
+          sbom: false
+          tags: ${{ env.CANDIDATE_TAG }}
+          build-args: |
+            OCI_REVISION=${{ env.RELEASE_COMMIT }}
+            OCI_SOURCE=https://github.com/${{ env.REPOSITORY }}
+
+      - name: Verify standard OCI labels before push
+        run: |
+          set -euo pipefail
+          REV_LABEL="$(docker image inspect "${CANDIDATE_TAG}" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+          SRC_LABEL="$(docker image inspect "${CANDIDATE_TAG}" --format '{{ index .Config.Labels "org.opencontainers.image.source" }}')"
+          test "${REV_LABEL}" = "${RELEASE_COMMIT}"
+          test "${SRC_LABEL}" = "https://github.com/${REPOSITORY}"
+
+      - name: Run hardened smoke against the approved local image
+        run: |
+          set -euo pipefail
+          python3 scripts/hardened_smoke_test.py \
+            --local-image "${CANDIDATE_TAG}" \
+            --expected-revision "${RELEASE_COMMIT}"
+
+      - name: Scan the approved local image for HIGH or CRITICAL vulnerabilities
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v trivy-cache:/root/.cache/trivy \
+            "${TRIVY_IMAGE}" image \
+            --scanners vuln \
+            --vuln-type os,library \
+            --severity HIGH,CRITICAL \
+            --exit-code 1 \
+            --ignore-unfixed=false \
+            --ignorefile /dev/null \
+            --no-progress \
+            "${CANDIDATE_TAG}"
+
       - name: Log in to GHCR with the repository GITHUB_TOKEN
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
@@ -203,18 +323,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 8. The image that was scanned is pushed under the immutable full
-      # commit SHA tag. No mutable tag is ever published.
       - name: Push the scanned image under the immutable full-SHA tag
         run: |
           set -euo pipefail
           TAG="${IMAGE_NAME}:${RELEASE_COMMIT}"
           docker tag "${CANDIDATE_TAG}" "${TAG}"
           docker push "${TAG}"
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
 
-      # 9. The immutable digest is resolved from the registry, not from a tag
-      # that could still move.
       - name: Resolve the immutable digest
         id: digest
         run: |
@@ -229,13 +345,9 @@ jobs:
             echo "The resolved digest is not a full sha256 digest: ${DIGEST}" >&2
             exit 1
           fi
-          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "digest=${DIGEST}" >> "${GITHUB_OUTPUT}"
           echo "The published image is ${IMAGE_NAME}@${DIGEST}"
 
-      # 10. GitHub signs the build provenance of the published digest in this
-      # same run. The attestation is produced by actions/attest itself. No
-      # attestation document is authored, assembled or uploaded by this
-      # repository.
       - name: Generate artifact attestation
         id: attest
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
@@ -244,9 +356,6 @@ jobs:
           subject-digest: ${{ steps.digest.outputs.digest }}
           push-to-registry: true
 
-      # 11. The attestation is verified publicly, against the Sigstore trusted
-      # root, the exact signer workflow, the exact signer commit, the exact
-      # source ref and the exact source commit.
       - name: Verify the attestation publicly
         env:
           GH_TOKEN: ${{ github.token }}
@@ -260,7 +369,7 @@ jobs:
               --predicate-type "${PREDICATE_TYPE}" \
               --signer-workflow "${SIGNER_WORKFLOW}" \
               --signer-digest "${RELEASE_COMMIT}" \
-              --source-ref "${GITHUB_REF}" \
+              --source-ref "${DISPATCH_REF}" \
               --source-digest "${RELEASE_COMMIT}" \
               --deny-self-hosted-runners \
               --format json > verification.json; then
@@ -279,30 +388,27 @@ jobs:
           jq -e '.[0].verificationResult.statement._type == "https://in-toto.io/Statement/v1"' verification.json > /dev/null
           jq -e --arg predicateType "${PREDICATE_TYPE}" \
             '.[0].verificationResult.statement.predicateType == $predicateType' verification.json > /dev/null
-          jq -e --arg name "${IMAGE_NAME}" --arg sha256 "${DIGEST#sha256:}" \
-            '(.[0].verificationResult.statement.subject | length) == 1
-               and (.[0].verificationResult.statement.subject[0].name == $name)
-               and (.[0].verificationResult.statement.subject[0].digest.sha256 == $sha256)' verification.json > /dev/null
-          jq -e --arg commit "${RELEASE_COMMIT}" \
-            'any(.[0].verificationResult.statement.predicate.buildDefinition.resolvedDependencies[]?; .digest.gitCommit? == $commit)' verification.json > /dev/null
-          jq -e '.[0].verificationResult.verifiedTimestamps | length > 0' verification.json > /dev/null
+          python3 scripts/validate_attestation_verification.py \
+            --input verification.json \
+            --subject-name "${IMAGE_NAME}" \
+            --subject-digest "${DIGEST#sha256:}" \
+            "${RELEASE_COMMIT}"
           echo "The release attestation is a verified GitHub build provenance attestation."
 
-      # 12. The published digest is pulled anonymously, with a Docker
-      # configuration that holds no credential at all, and the application
-      # package inside the published image is compared byte for byte with the
-      # checked out source.
       - name: Verify an anonymous digest pull and the source binding
+        env:
+          DIGEST: ${{ steps.digest.outputs.digest }}
         run: |
           set -euo pipefail
-          DIGEST="${{ steps.digest.outputs.digest }}"
           CLEAN_CONFIG="$(mktemp -d)"
           printf '{"auths":{}}' > "${CLEAN_CONFIG}/config.json"
           DOCKER_CONFIG="${CLEAN_CONFIG}" docker pull --platform linux/amd64 "${IMAGE_NAME}@${DIGEST}"
           DOCKER_CONFIG="${CLEAN_CONFIG}" docker image inspect "${IMAGE_NAME}@${DIGEST}" \
-            --format '{{.RepoDigests}} {{.Config.User}}' | tee pulled.txt
+            --format '{{.RepoDigests}} {{.Config.User}} {{ index .Config.Labels "org.opencontainers.image.revision" }} {{ index .Config.Labels "org.opencontainers.image.source" }}' | tee pulled.txt
           grep -q "${DIGEST#sha256:}" pulled.txt
           grep -q "10001:10001" pulled.txt
+          grep -q "${RELEASE_COMMIT}" pulled.txt
+          grep -q "https://github.com/${REPOSITORY}" pulled.txt
 
           CONTAINER_ID="$(docker create "${IMAGE_NAME}@${DIGEST}")"
           mkdir -p /tmp/published
@@ -318,10 +424,9 @@ jobs:
           fi
           echo "The published application package is byte identical to ${RELEASE_COMMIT}."
 
-      # 13. The published digest is scanned again, with the same unsuppressed
-      # settings, so the artifact that is attested is the artifact that was
-      # scanned.
       - name: Rescan the published digest
+        env:
+          DIGEST: ${{ steps.digest.outputs.digest }}
         run: |
           set -euo pipefail
           docker run --rm \
@@ -335,19 +440,18 @@ jobs:
             --ignore-unfixed=false \
             --ignorefile /dev/null \
             --no-progress \
-            "${IMAGE_NAME}@${{ steps.digest.outputs.digest }}"
+            "${IMAGE_NAME}@${DIGEST}"
 
-      # 14. The published digest is started with the release hardening applied
-      # and is exercised from inside the container, with no network and no
-      # published host port.
       - name: Run the hardened runtime smoke against the published digest
+        env:
+          DIGEST: ${{ steps.digest.outputs.digest }}
         run: |
           set -euo pipefail
-          python3 scripts/hardened_smoke_test.py --published-image "${IMAGE_NAME}@${{ steps.digest.outputs.digest }}"
+          python3 scripts/hardened_smoke_test.py \
+            --published-image "${IMAGE_NAME}@${DIGEST}" \
+            --expected-revision "${RELEASE_COMMIT}"
 
-      # 15. The final digest is handed to the independent auditor as run
-      # evidence, in the job summary and as a downloadable artifact.
-      - name: Hand the digest to the independent auditor
+      - name: Emit release evidence for final-digest audit
         env:
           DIGEST: ${{ steps.digest.outputs.digest }}
           ATTESTATION_ID: ${{ steps.attest.outputs.attestation-id }}
@@ -369,7 +473,7 @@ jobs:
               tag: $tag}' > release-evidence.json
           cp verification.json release-verification.json
           {
-            echo "### Release candidate for independent audit"
+            echo "### Published release artifact for final-digest audit"
             echo ""
             echo "- Source commit: \`${RELEASE_COMMIT}\`"
             echo "- Immutable tag: \`${IMAGE_NAME}:${RELEASE_COMMIT}\`"
@@ -381,7 +485,7 @@ jobs:
             echo "- Local Trivy scan: passed"
             echo "- Published digest Trivy scan: passed"
             echo "- Published digest hardened smoke: passed"
-          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Upload the release evidence
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -392,97 +496,3 @@ jobs:
             release-verification.json
           if-no-files-found: error
           retention-days: 90
-
-  # 16. The protected human approval is a separate, non-publishing job. It
-  # waits for the environment reviewer, then revalidates the evidence.
-  release-approval:
-    name: Protected release evidence approval
-    if: >-
-      github.event_name == 'workflow_dispatch' &&
-      github.ref == 'refs/heads/remediation/pebble-removal'
-    needs: [build-publish-attest]
-    runs-on: ubuntu-24.04
-    environment: release-attestation
-    permissions:
-      contents: read
-      attestations: read
-    steps:
-      - name: Check out the release commit
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Download the release evidence
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-        with:
-          name: release-evidence
-          path: evidence
-
-      - name: Revalidate commit, digest and gate evidence
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${RELEASE_COMMIT}"
-          jq -e --arg commit "${RELEASE_COMMIT}" \
-            '.commit == $commit and (.digest | test("^sha256:[0-9a-f]{64}$")) and
-             .localSmokePassed == true and .localScanPassed == true and
-             .publishedScanPassed == true and .publishedSmokePassed == true and
-             .repository == "ofayese/matchpulse-live" and
-             .image == "ghcr.io/ofayese/matchpulse-live" and
-             .tag == ("ghcr.io/ofayese/matchpulse-live:" + $commit) and
-             (.attestationId | type == "string" and length > 0) and
-             (.attestationUrl | type == "string" and startswith("https://")) and
-             .predicateType == "https://slsa.dev/provenance/v1"' evidence/release-evidence.json
-          jq -e --arg digest "$(jq -r '.digest' evidence/release-evidence.json)" \
-            'length == 1 and .[0].verificationResult.statement.subject[0].digest.sha256 == ($digest | sub("^sha256:"; ""))' \
-            evidence/release-verification.json
-
-      - name: Re-run the published digest scan and hardened smoke
-        run: |
-          set -euo pipefail
-          DIGEST="$(jq -r '.digest' evidence/release-evidence.json)"
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            -v trivy-cache:/root/.cache/trivy "${TRIVY_IMAGE}" image \
-            --scanners vuln --vuln-type os,library --severity HIGH,CRITICAL \
-            --exit-code 1 --ignore-unfixed=false --ignorefile /dev/null --no-progress \
-            "${IMAGE_NAME}@${DIGEST}"
-          python3 scripts/hardened_smoke_test.py --published-image "${IMAGE_NAME}@${DIGEST}"
-
-      - name: Re-verify the approved digest and its attestation
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          DIGEST="$(jq -r '.digest' evidence/release-evidence.json)"
-          COMMIT="$(jq -r '.commit' evidence/release-evidence.json)"
-          if [ "${COMMIT}" != "${RELEASE_COMMIT}" ]; then
-            echo "The evidence commit ${COMMIT} does not match the release commit ${RELEASE_COMMIT}." >&2
-            exit 1
-          fi
-          gh attestation verify "oci://${IMAGE_NAME}@${DIGEST}" \
-            --repo "${REPOSITORY}" \
-            --predicate-type "${PREDICATE_TYPE}" \
-            --signer-workflow "${SIGNER_WORKFLOW}" \
-            --signer-digest "${RELEASE_COMMIT}" \
-            --source-ref "${GITHUB_REF}" \
-            --source-digest "${RELEASE_COMMIT}" \
-            --deny-self-hosted-runners \
-            --format json > approved-verification.json
-          jq -e --arg name "${IMAGE_NAME}" --arg sha256 "${DIGEST#sha256:}" \
-            '(.[0].verificationResult.statement.subject | length) == 1
-               and (.[0].verificationResult.statement.subject[0].name == $name)
-               and (.[0].verificationResult.statement.subject[0].digest.sha256 == $sha256)' approved-verification.json > /dev/null
-          echo "The approved digest ${DIGEST} still carries a verifiable build provenance attestation."
-
-      - name: Record the approved release
-        run: |
-          set -euo pipefail
-          DIGEST="$(jq -r '.digest' evidence/release-evidence.json)"
-          {
-            echo "### Approved release"
-            echo ""
-            echo "- Source commit: \`${RELEASE_COMMIT}\`"
-            echo "- Immutable digest: \`${DIGEST}\`"
-            echo "- Immutable reference: \`${IMAGE_NAME}@${DIGEST}\`"
-            echo "- Attestation id: \`$(jq -r '.attestationId' evidence/release-evidence.json)\`"
-          } >> "$GITHUB_STEP_SUMMARY"

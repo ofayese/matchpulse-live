@@ -15,6 +15,12 @@ import pytest
 
 from matchpulse.foundry import (
     AUTH_MANAGED_IDENTITY,
+    DEFAULT_CALL_BUDGET,
+    DEFAULT_MAX_CONCURRENCY,
+    DEFAULT_TIMEOUT_SECONDS,
+    MAX_OUTPUT_TOKENS,
+    MAX_PROMPT_PAYLOAD_BYTES,
+    RETRY_COUNT,
     STATE_CONFIGURED_UNVERIFIED,
     STATE_DEGRADED_FALLBACK,
     STATE_DISABLED,
@@ -513,3 +519,191 @@ def test_rewrite_many_bounds_concurrency():
     finally:
         asyncio.run(http.aclose())
     assert peak <= 2
+
+
+def test_secure_model_control_constants_and_defaults(monkeypatch):
+    assert DEFAULT_CALL_BUDGET == 20
+    assert DEFAULT_MAX_CONCURRENCY == 1
+    assert MAX_PROMPT_PAYLOAD_BYTES == 4096
+    assert MAX_OUTPUT_TOKENS == 128
+    assert DEFAULT_TIMEOUT_SECONDS == 1.4
+    assert RETRY_COUNT == 0
+
+    monkeypatch.setenv("FOUNDRY_ENDPOINT", "https://example.test")
+    monkeypatch.setenv("FOUNDRY_DEPLOYMENT", "model")
+    monkeypatch.setenv("FOUNDRY_AUTH_MODE", AUTH_MANAGED_IDENTITY)
+    monkeypatch.delenv("FOUNDRY_MAX_CONCURRENCY", raising=False)
+    monkeypatch.delenv("FOUNDRY_CALL_BUDGET", raising=False)
+    monkeypatch.delenv("FOUNDRY_TIMEOUT_SECONDS", raising=False)
+    settings = FoundrySettings.from_env()
+    assert settings is not None
+    assert settings.call_budget == 20
+    assert settings.max_concurrency == 1
+    assert settings.timeout_seconds == 1.4
+
+
+def test_calls_1_to_20_are_allowed_and_call_21_falls_back_by_default():
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return _completion(json.dumps({
+            "title": "Faster shot",
+            "body": "A shot reached 101 km/h.",
+            "overlay_text": "101 km/h",
+        }))
+
+    settings = FoundrySettings("https://example.test", "model", SECRET)
+    assert settings.call_budget == 20
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = FoundryNarrativeClient(settings, http_client=http)
+
+    async def scenario():
+        return [await client.rewrite(item()) for _ in range(21)]
+
+    try:
+        results = asyncio.run(scenario())
+    finally:
+        asyncio.run(http.aclose())
+
+    assert calls == 20
+    assert client.remaining_calls == 0
+    assert all(warn is None and out.title == "Faster shot" for out, warn in results[:20])
+    assert results[20][0] == item()
+    assert results[20][1] == "Foundry fallback: call-budget-exhausted"
+
+
+def test_concurrent_request_two_falls_back_under_default_concurrency_one():
+    class BlockingTransport(httpx.AsyncBaseTransport):
+        def __init__(self) -> None:
+            self.entered = asyncio.Event()
+            self.release = asyncio.Event()
+            self.calls = 0
+            self.active = 0
+            self.peak = 0
+
+        async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+            self.calls += 1
+            self.active += 1
+            self.peak = max(self.peak, self.active)
+            self.entered.set()
+            try:
+                await self.release.wait()
+                return _completion(json.dumps({
+                    "title": "Faster shot",
+                    "body": "A shot reached 101 km/h.",
+                    "overlay_text": "101 km/h",
+                }))
+            finally:
+                self.active -= 1
+
+    async def scenario():
+        transport = BlockingTransport()
+        http = httpx.AsyncClient(transport=transport)
+        client = FoundryNarrativeClient(
+            FoundrySettings("https://example.test", "model", SECRET),
+            http_client=http,
+        )
+        assert client.settings.max_concurrency == 1
+        first_task = asyncio.create_task(client.rewrite(item()))
+        await transport.entered.wait()
+        second = await client.rewrite(item())
+        transport.release.set()
+        first = await first_task
+        await http.aclose()
+        return first, second, transport
+
+    first, second, transport = asyncio.run(scenario())
+    assert first[1] is None
+    assert first[0].title == "Faster shot"
+    assert second[0] == item()
+    assert second[1] == "Foundry fallback: concurrency-limit-exceeded"
+    assert transport.calls == 1
+    assert transport.peak == 1
+
+
+def test_timeout_is_1_4_seconds_with_zero_retries():
+    calls = 0
+    observed_timeouts: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        observed_timeouts.append(request.extensions["timeout"]["read"])
+        raise httpx.TimeoutException("request timed out")
+
+    settings = FoundrySettings("https://example.test", "model", SECRET)
+    assert settings.timeout_seconds == 1.4
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = FoundryNarrativeClient(settings, http_client=http)
+    try:
+        output, warning = _run(client)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == item()
+    assert warning == "Foundry fallback: TimeoutException"
+    assert calls == 1
+    assert observed_timeouts == [1.4]
+
+
+def test_recursive_model_calls_cannot_occur():
+    calls = 0
+    recursive_result: tuple | None = None
+    client_ref: list[FoundryNarrativeClient] = []
+
+    class RecursiveTransport(httpx.AsyncBaseTransport):
+        async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+            nonlocal calls, recursive_result
+            calls += 1
+            recursive_result = await client_ref[0].rewrite(item())
+            return _completion(json.dumps({
+                "title": "Faster shot",
+                "body": "A shot reached 101 km/h.",
+                "overlay_text": "101 km/h",
+            }))
+
+    http = httpx.AsyncClient(transport=RecursiveTransport())
+    client = FoundryNarrativeClient(
+        FoundrySettings("https://example.test", "model", SECRET, max_concurrency=4),
+        http_client=http,
+    )
+    client_ref.append(client)
+    try:
+        outer_out, outer_warn = _run(client)
+    finally:
+        asyncio.run(http.aclose())
+    assert calls == 1
+    assert outer_warn is None
+    assert outer_out.title == "Faster shot"
+    assert recursive_result is not None
+    assert recursive_result[0] == item()
+    assert recursive_result[1] == "Foundry fallback: recursive-call-blocked"
+
+
+def test_prompt_body_is_never_logged_on_failure_or_rejection(caplog):
+    prompt_secret_marker = "CONFIDENTIAL_PROMPT_FORMULA_991122"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise RuntimeError(f"transport error with {prompt_secret_marker} and {SECRET}")
+
+    source = item().model_copy(update={
+        "evidence": Evidence(
+            event_ids=["e1"],
+            inputs={"speed": 101},
+            formula=prompt_secret_marker,
+            confidence=0.9,
+        ),
+    })
+    client, http = _client(handler)
+    try:
+        with caplog.at_level(logging.DEBUG):
+            output, warning = _run(client, source)
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning == "Foundry fallback: RuntimeError"
+    for record in caplog.records:
+        msg = record.getMessage()
+        assert prompt_secret_marker not in msg
+        assert SECRET not in msg

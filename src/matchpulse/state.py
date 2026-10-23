@@ -46,6 +46,16 @@ class MatchAccumulator:
         with self._lock:
             return [item.model_copy(deep=True) for item in self._insights.get(match_id, [])]
 
+    def reset(self, match_id: str) -> bool:
+        with self._lock:
+            existed = match_id in self._states
+            self._states.pop(match_id, None)
+            self._seen.pop(match_id, None)
+            self._recent.pop(match_id, None)
+            self._evidence_events.pop(match_id, None)
+            self._insights.pop(match_id, None)
+            return existed
+
     def apply(self, event: MatchEvent) -> ApplyResult:
         with self._lock:
             state = self._states.setdefault(event.match_id, MatchState(match_id=event.match_id))

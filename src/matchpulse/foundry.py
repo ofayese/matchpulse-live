@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+import contextvars
 import json
 import logging
 import os
@@ -19,10 +20,13 @@ log = logging.getLogger(__name__)
 DEFAULT_API_VERSION = "2024-10-21"
 DEFAULT_TIMEOUT_SECONDS = 1.4
 DEFAULT_SCOPE = "https://cognitiveservices.azure.com/.default"
-DEFAULT_MAX_CONCURRENCY = 4
+DEFAULT_MAX_CONCURRENCY = 1
 DEFAULT_CALL_BUDGET = 20
 MAX_PROMPT_PAYLOAD_BYTES = 4096
 MAX_OUTPUT_TOKENS = 128
+RETRY_COUNT = 0
+
+_IN_REWRITE: contextvars.ContextVar[bool] = contextvars.ContextVar("_IN_REWRITE", default=False)
 
 AUTH_API_KEY = "api_key"
 AUTH_MANAGED_IDENTITY = "managed_identity"
@@ -231,6 +235,7 @@ class FoundryNarrativeClient:
         self._http_client = http_client
         self._state = STATE_CONFIGURED_UNVERIFIED
         self._remaining_calls = max(0, int(settings.call_budget))
+        self._active_requests = 0
         self._attempted = 0
         self._succeeded = 0
         self._fallbacks = 0
@@ -263,8 +268,21 @@ class FoundryNarrativeClient:
     # ------------------------------------------------------------ public API
 
     async def rewrite(self, item: PersonalizedInsight) -> tuple[PersonalizedInsight, str | None]:
-        """Rewrite one insight, falling back to the deterministic text."""
-        return await self._rewrite_one(item)
+        if _IN_REWRITE.get():
+            self._fallbacks += 1
+            self._state = STATE_DEGRADED_FALLBACK
+            return item, "Foundry fallback: recursive-call-blocked"
+        if self._active_requests >= max(1, self.settings.max_concurrency):
+            self._fallbacks += 1
+            self._state = STATE_DEGRADED_FALLBACK
+            return item, "Foundry fallback: concurrency-limit-exceeded"
+        self._active_requests += 1
+        token = _IN_REWRITE.set(True)
+        try:
+            return await self._rewrite_one(item)
+        finally:
+            _IN_REWRITE.reset(token)
+            self._active_requests -= 1
 
     async def rewrite_many(self, items: list[PersonalizedInsight]) -> tuple[list[PersonalizedInsight], list[str]]:
         """Rewrite several insights with bounded concurrency.
@@ -274,11 +292,15 @@ class FoundryNarrativeClient:
         """
         if not items:
             return [], []
+        if _IN_REWRITE.get():
+            self._fallbacks += len(items)
+            self._state = STATE_DEGRADED_FALLBACK
+            return list(items), ["Foundry fallback: recursive-call-blocked"] * len(items)
         semaphore = asyncio.Semaphore(max(1, self.settings.max_concurrency))
 
         async def guarded(item: PersonalizedInsight) -> tuple[PersonalizedInsight, str | None]:
             async with semaphore:
-                return await self._rewrite_one(item)
+                return await self.rewrite(item)
 
         results = await asyncio.gather(*(guarded(item) for item in items), return_exceptions=True)
         outputs: list[PersonalizedInsight] = []

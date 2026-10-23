@@ -180,8 +180,8 @@ optional and are only needed for the optional Microsoft Foundry enrichment.
 | `FOUNDRY_TIMEOUT_SECONDS` | Timeout before the deterministic fallback, default `1.4` | Runtime environment |
 | `FOUNDRY_AUTH_MODE` | `managed_identity` or `api_key` | Runtime environment |
 | `FOUNDRY_AZURE_SCOPE` | Token scope for managed identity | Runtime environment |
-| `FOUNDRY_MAX_CONCURRENCY` | Maximum concurrent model calls, default `4` | Runtime environment |
-| `FOUNDRY_CALL_BUDGET` | Process-wide model call budget, default `60` | Runtime environment |
+| `FOUNDRY_MAX_CONCURRENCY` | Maximum concurrent model calls, default `1`; excess calls fall back | Runtime environment |
+| `FOUNDRY_CALL_BUDGET` | Process-wide model call budget, default `20`; resets on restart | Runtime environment |
 | `FOUNDRY_API_KEY` | Runtime secret for the local API-key path only | **Never** committed |
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` | Enables optional telemetry; the app works normally without it | Runtime environment or GitHub environment variable |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Alternative OpenTelemetry exporter endpoint | Runtime environment |
