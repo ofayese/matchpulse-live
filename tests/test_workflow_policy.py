@@ -1,6 +1,7 @@
-import json
 import hashlib
+import json
 from pathlib import Path
+
 
 def test_release_policy_consistency():
     root = Path(__file__).parent.parent
@@ -10,7 +11,7 @@ def test_release_policy_consistency():
     assert policy_path.exists()
     assert workflow_path.exists()
     
-    with open(policy_path, "r", encoding="utf-8") as f:
+    with open(policy_path, encoding="utf-8") as f:
         policy = json.load(f)
         
     with open(workflow_path, "rb") as f:
