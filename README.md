@@ -109,7 +109,7 @@ matchpulse-synthetic --jsonl --events 5 > data/demo-match.jsonl
 Key routes:
 
 | Route | Purpose |
-|---|---|
+| --- | --- |
 | `POST /v1/events` | Ingest one strict synthetic event and return personalized insights |
 | `POST /v1/events/batch` | Ingest up to 500 ordered events |
 | `GET /v1/matches/{id}/state` | Current explainable match state |
@@ -130,7 +130,7 @@ configuration the service reports `"foundry_mode": "disabled"` on
 `foundry_mode` reports one of four truthful states:
 
 | State | Meaning |
-|---|---|
+| --- | --- |
 | `disabled` | No Foundry configuration; the deterministic pipeline is the only output |
 | `configured-unverified` | Configured, but no model call has succeeded yet |
 | `verified` | A model call completed and passed every guard |
@@ -140,7 +140,7 @@ To enable the optional rewrite, set environment variables (see
 [`.env.example`](.env.example)):
 
 | Variable | Required | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `FOUNDRY_ENDPOINT` | Yes | Azure OpenAI / Foundry endpoint |
 | `FOUNDRY_DEPLOYMENT` | Yes | Deployment name |
 | `FOUNDRY_AUTH_MODE` | No | `managed_identity` (preferred) or `api_key` |

@@ -12,7 +12,6 @@ import logging
 
 import httpx
 import pytest
-
 from matchpulse.foundry import (
     AUTH_MANAGED_IDENTITY,
     DEFAULT_CALL_BUDGET,
