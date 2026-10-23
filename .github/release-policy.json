@@ -1,0 +1,14 @@
+{
+  "workflow_path": ".github/workflows/release-attest.yml",
+  "workflow_sha256": "366278d67e4917b4173838ae35fa380d8f89866f75b6464a2e3fef6365124ed8",
+  "allowed_publication_branch": "main",
+  "required_environment": "release-attestation",
+  "required_distinct_human_approval": true,
+  "self_review_prohibited": true,
+  "admin_bypass_prohibited": true,
+  "immutable_sha_tag_required": true,
+  "standard_oci_revision_required": true,
+  "standard_oci_source_required": true,
+  "final_digest_audit_required": true,
+  "azure_deployment_coupled": false
+}
