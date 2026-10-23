@@ -14,8 +14,9 @@ name: azure-deploy
 #
 # No long-lived AZURE_CLIENT_SECRET is used or requested.
 #
-# To enable: create the environment and its variables, then change the
-# `if:` condition below from `false` to `true`.
+# To enable deployments, set the protected repository variable
+# AZURE_DEPLOY_ENABLED to `true` after the environment, approval rules,
+# subscription, resource group, image and least-privilege identity are approved.
 
 on:
   workflow_dispatch:
@@ -72,7 +73,7 @@ jobs:
 
   deploy:
     name: Deploy to Azure
-    if: false
+    if: ${{ vars.AZURE_DEPLOY_ENABLED == 'true' }}
     needs: bicep
     runs-on: ubuntu-latest
     environment: azure-production
@@ -115,6 +116,16 @@ jobs:
 
       - name: Publish summary
         run: |
-          echo "### Azure deployment" >> "$GITHUB_STEP_SUMMARY"
-          echo "Resource group: \${{ vars.AZURE_RESOURCE_GROUP }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Container app: \${{ vars.CONTAINER_APP_NAME }}" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Azure deployment"
+      - name: Publish summary
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }}
+        run: |
+          {
+            echo "### Azure deployment"
+            echo "Resource group: ${AZURE_RESOURCE_GROUP}"
+            echo "Container app: ${CONTAINER_APP_NAME}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "$GITHUB_STEP_SUMMARY"

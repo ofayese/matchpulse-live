@@ -148,7 +148,13 @@ To enable the optional rewrite, set environment variables (see
 | `FOUNDRY_API_VERSION` | No | Defaults to `2024-10-21` |
 | `FOUNDRY_TIMEOUT_SECONDS` | No | Defaults to `1.4` |
 | `FOUNDRY_MAX_CONCURRENCY` | No | Maximum concurrent model calls, default `4` |
-| `FOUNDRY_CALL_BUDGET` | No | Process-wide model call budget, default `60` |
+| `FOUNDRY_CALL_BUDGET` | No | Per-process outbound call budget, default `20`; resets on process restart and is not a durable billing limit |
+
+The model adapter makes one attempt per rewrite (no automatic retries), uses a
+1.4-second default timeout, caps each response at 128 tokens, and sends no
+prompt payload larger than 4 KiB. Oversized prompts and exhausted call budgets
+use the deterministic text. These controls limit one process; restarts reset
+the call count. They are not a hard Azure spend limit.
 
 The model is a constrained copy editor, not the source of facts. It cannot
 create match state, alter evidence, or introduce a number that is not in the

@@ -28,6 +28,11 @@ subscription as part of the published repository.
 | `Microsoft.App/managedEnvironments` | Container Apps environment |
 | `Microsoft.App/containerApps` | The MatchPulse Live service, system-assigned managed identity, HTTPS-only ingress, liveness/readiness/startup probes |
 
+Monitoring defaults are enabled with 30-day workspace retention and a 0.023
+GB/day Log Analytics cap. The cap may overshoot and bill excess data, and it
+stops ingestion after the cap; it is not a hard spending limit. HTTP diagnostic
+categories are not enabled.
+
 
 Event Hubs is NOT part of the deployed baseline: no consumer, checkpoint store, or processed-message trace exists. HTTP ingestion
 (`POST /v1/events`) remains the supported ingestion path.
@@ -82,25 +87,13 @@ az deployment group validate \
 
 ---
 
-## 2. Deploy
+## 2. Deployment sequence
 
-> **Creates billable resources.** Container Apps, Container Apps environment,
-> Log Analytics all incur cost. Run this only against an
-> explicitly approved subscription and resource group.
-
-```bash
-az deployment group create \
-  --resource-group <approved-resource-group> \
-  --template-file infra/main.bicep \
-  --parameters prefix=matchpulse \
-  --parameters image=ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90 \
-  --parameters foundryRuntimeMode=off
-```
-
-`infra/main.parameters.example.json` contains the same non-secret parameter
-set as a starting point. The image above is the audited, published build for
-source commit `e8289265dc1920a2f313a9ec45ebf748591a3071`; it was scanned with
-0 HIGH and 0 CRITICAL findings before publication.
+See [`AZURE_CHALLENGE_DEPLOYMENT_PLAN.md`](AZURE_CHALLENGE_DEPLOYMENT_PLAN.md)
+for the proposed, ordered provider, Azure OpenAI, what-if, deployment, RBAC,
+validation, cost-review, and cleanup commands. Resource creation is billable
+and requires the exact resource-group authorization and a separate explicit
+deployment approval. The commands in the plan have not been executed.
 
 ### Parameters
 
@@ -108,14 +101,15 @@ source commit `e8289265dc1920a2f313a9ec45ebf748591a3071`; it was scanned with
 | --------- | -------- | ----- |
 | `prefix` | No | Lowercase prefix for resource names; hyphens are stripped automatically |
 | `location` | No | Defaults to the resource group location |
-| `image` | **Yes** | Immutable digest reference, for example `ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90` |
+| `image` | **Yes** | `ghcr.io/ofayese/matchpulse-live@sha256:1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c` (attestation 58474240) |
 | `foundryRuntimeMode` | No | `off` (default) or `validate`; `off` means no endpoint, no deployment, no key and no model inference |
 | `foundryEndpoint` | No | Only used when `foundryRuntimeMode` is `validate`; leave empty otherwise |
 | `foundryDeployment` | No | Only used when `foundryRuntimeMode` is `validate`; leave empty otherwise |
 | `foundryAuthMode` | No | `managed_identity` (default) or `disabled` |
-| `enableMonitoring` | No | Enables Application Insights and the Log Analytics workspace, default `true` |
-| `logRetentionInDays` | No | 7-30, default 7 |
-| `dailyQuotaGb` | No | 1-10, default 1; the explicit low cost cap for monitoring |
+| `monitoringEnabled` | No | Enables Application Insights and Log Analytics, default `true` |
+| `logRetentionDays` | No | 30 days; minimum workspace default, not an ingestion cost control |
+| `logDailyQuotaGb` | No | Allowed values `0.023`, `0.05`, `0.1`, `1`; default minimum `0.023` GB/day |
+| `foundryCallBudget` | No | 1-20 calls per process, default 20; resets on process restart |
 | `minReplicas` / `maxReplicas` | No | 0-1 / 1-1; one replica is the maximum until durable state exists |
 | `concurrentRequestsPerReplica` | No | 1-200, default 50 |
 
@@ -131,28 +125,23 @@ No output exposes a secret.
 
 ---
 
-## 3. Microsoft Foundry access
+## 3. Azure OpenAI access
 
 **Preferred: managed identity**
 
 The Container App receives a system-assigned managed identity. The service
 reads `FOUNDRY_AUTH_MODE=managed_identity` and acquires a token through
 `DefaultAzureCredential` (`azure-identity`, optional extra). Grant the
-identity `Cognitive Services OpenAI User` on the Foundry resource.
+identity `Cognitive Services OpenAI User` on the exact Azure OpenAI account
+scope, not the subscription.
 
 ```bash
 az role assignment create \
   --assignee-object-id <managed-identity-principal-id> \
   --assignee-principal-type ServicePrincipal \
   --role "Cognitive Services OpenAI User" \
-  --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/<provider>/<foundry-resource>
+  --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<azure-openai-account>
 ```
-
-**Fallback: Azure Key Vault**
-
-Store the key in Key Vault and reference it from the Container App secret
-store. The value is never stored in this repository and never appears in the
-template.
 
 **Local only: API key**
 
@@ -188,20 +177,17 @@ touches `infra/`.
 
 ## 5. Cleanup
 
-Deleting the resource group removes every resource the template created:
-
-```bash
-az group delete --name <approved-resource-group> --yes
-```
-
-To remove only the application and keep the surrounding resources:
+Preserve the resource group, owner tag, and budget. Disable ingress and remove
+only the approved challenge resources using the commands in
+[`AZURE_CHALLENGE_DEPLOYMENT_PLAN.md`](AZURE_CHALLENGE_DEPLOYMENT_PLAN.md).
+The app-only cleanup command is:
 
 ```bash
 az containerapp delete --name <app-name> --resource-group <approved-resource-group> --yes
 ```
 
-Log Analytics and Application Insights are deleted with the resource group or
-can be removed individually:
+Log Analytics and Application Insights can be removed individually after the
+app and environment:
 
 ```bash
 az monitor log-analytics workspace delete --workspace-name <workspace-name> --resource-group <approved-resource-group> --yes

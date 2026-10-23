@@ -43,4 +43,4 @@ HEALTHCHECK --interval=20s --timeout=3s --start-period=10s --retries=3 \
   CMD ["/usr/bin/python3.12", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=2)"]
 
 ENTRYPOINT ["/usr/bin/python3.12", "-m", "uvicorn"]
-CMD ["matchpulse.service:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers"]
+CMD ["matchpulse.service:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers", "--no-access-log", "--log-level", "warning"]

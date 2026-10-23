@@ -20,7 +20,9 @@ DEFAULT_API_VERSION = "2024-10-21"
 DEFAULT_TIMEOUT_SECONDS = 1.4
 DEFAULT_SCOPE = "https://cognitiveservices.azure.com/.default"
 DEFAULT_MAX_CONCURRENCY = 4
-DEFAULT_CALL_BUDGET = 60
+DEFAULT_CALL_BUDGET = 20
+MAX_PROMPT_PAYLOAD_BYTES = 4096
+MAX_OUTPUT_TOKENS = 128
 
 AUTH_API_KEY = "api_key"
 AUTH_MANAGED_IDENTITY = "managed_identity"
@@ -302,8 +304,6 @@ class FoundryNarrativeClient:
             self._state = STATE_DEGRADED_FALLBACK
             return item, "Foundry fallback: call-budget-exhausted"
 
-        self._remaining_calls -= 1
-        self._attempted += 1
         url = (f"{self.settings.endpoint}/openai/deployments/{self.settings.deployment}"
                f"/chat/completions?api-version={self.settings.api_version}")
         payload = {
@@ -312,9 +312,17 @@ class FoundryNarrativeClient:
                 {"role": "user", "content": self._prompt(item)},
             ],
             "temperature": 0.1,
-            "max_tokens": 240,
+            "max_tokens": MAX_OUTPUT_TOKENS,
             "response_format": {"type": "json_object"},
         }
+        payload_bytes = len(json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+        if payload_bytes > MAX_PROMPT_PAYLOAD_BYTES:
+            self._fallbacks += 1
+            self._state = STATE_DEGRADED_FALLBACK
+            return item, "Foundry fallback: prompt-budget-exceeded"
+
+        self._remaining_calls -= 1
+        self._attempted += 1
         try:
             headers = {"Content-Type": "application/json"}
             headers.update(self._provider.headers())

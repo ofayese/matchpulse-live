@@ -12,6 +12,18 @@ def test_health_and_profiles():
         assert len(client.get("/v1/profiles").json()) == 4
 
 
+def test_health_checks_do_not_consume_foundry_call_budget(monkeypatch):
+    monkeypatch.setenv("FOUNDRY_ENDPOINT", "https://example.test")
+    monkeypatch.setenv("FOUNDRY_DEPLOYMENT", "model")
+    monkeypatch.setenv("FOUNDRY_AUTH_MODE", "managed_identity")
+    monkeypatch.setenv("FOUNDRY_CALL_BUDGET", "1")
+    app = create_app()
+    with TestClient(app) as client:
+        assert client.get("/health/live").status_code == 200
+        assert client.get("/health/ready").status_code == 200
+        assert app.state.foundry.remaining_calls == 1
+
+
 def test_ingest_state_and_recap():
     with TestClient(create_app()) as client:
         events = list(generate_match(match_id="api-demo", seed=11, events=24))
