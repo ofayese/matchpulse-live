@@ -118,7 +118,7 @@ def main() -> int:
     print("PASS: no obvious secrets or forbidden files detected")
     print("PASS: synthetic-only gate documented")
     print("PASS: solution configurations present")
-    print("ACTION REQUIRED: resolve registration eligibility, complete Azure/Foundry deployment if authorized, record video, and verify submission URLs")
+    print("ACTION REQUIRED: complete remaining eligibility attestations, secure Azure approval, deploy Azure/Foundry if authorized, record video, and verify submission URLs")
     return 0
 
 

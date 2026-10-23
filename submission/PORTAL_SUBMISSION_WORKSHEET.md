@@ -1,4 +1,4 @@
-# Portal submission worksheet — blocked pending organizer exception
+# Portal submission worksheet — blocked pending hosted proof and cloud authorization
 
 This worksheet is preparation only. The challenge portal has not been submitted.
 
@@ -12,7 +12,7 @@ This worksheet is preparation only. The challenge portal has not been submitted.
 - **Authoritative release tag:** `challenge-2026-submission` already exists at a prior commit. Do not move or represent it as this working branch.
 - **Accepted published image:** `ghcr.io/ofayese/matchpulse-live@sha256:1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c`
 - **Accepted artifact candidate:** `e228610a6d220f5532b0d8d3baac0a629db14208`
-- **Hosted demo:** Not available. No Azure deployment was created because registration confirmation arrived after the stated registration deadline; an organizer exception is required before any billable work.
+- **Hosted demo:** Not available. Registration confirmation is dated October 20, 2026 at 1:29 PM Eastern, before the stated 3:00 PM Eastern cutoff. No Azure deployment was created because an approved subscription, resource group, region, budget ceiling, and explicit cost authorization were not provided.
 - **Demo video:** Not available. No recording or upload has been represented as complete.
 
 ## Pitch
@@ -29,7 +29,7 @@ Python, FastAPI, Docker, Bicep deployment templates, GitHub Actions, GitHub Cont
 
 ## Judge testing
 
-No-login hosted judge testing is unavailable. The existing instructions describe local execution and do not provide a verified public demo URL. Do not enter a guessed URL. The portal submission remains blocked until an organizer exception is granted, a hosted demo and video are produced, and their public links are tested signed out.
+No-login hosted judge testing is unavailable. The existing instructions describe local execution and do not provide a verified public demo URL. Do not enter a guessed URL. The portal submission remains blocked until cloud scope and spending are explicitly approved, a hosted demo and video are produced, and their public links are tested signed out.
 
 ## Known limitations
 
@@ -41,4 +41,4 @@ No-login hosted judge testing is unavailable. The existing instructions describe
 
 ## Human-provided fields
 
-Team members, authorized representative, and every eligibility attestation must be supplied and confirmed by the entrant. The registration email provided for this review is timestamped after the stated deadline; organizer confirmation of an exception is required before asserting eligibility.
+Team members, authorized representative, and every remaining eligibility attestation must be supplied and confirmed by the entrant. The supplied registration confirmation is treated as timely in the client timezone (America/New_York): 1:29 PM Eastern, before the 3:00 PM Eastern cutoff.

@@ -2,7 +2,7 @@
 
 ## Current readiness status — October 23, 2026
 
-The registration confirmation supplied for this task is timestamped October 20, 2026 at 1:29 PM Pacific, after the stated noon Pacific registration deadline. Ordinary eligibility is not confirmed. Do not deploy billable Azure resources or claim submission readiness unless the organizer grants an exception. A sanitized escalation draft is preserved with the external readiness evidence package. The portal has not been submitted.
+The registration confirmation supplied for this task is timestamped October 20, 2026 at 1:29 PM Eastern (the client timezone), before the 3:00 PM Eastern equivalent of the official 12:00 PM Pacific registration deadline. Registration is confirmed for this gate. Azure deployment remains blocked because no approved cloud scope, budget ceiling, or explicit cost authorization was provided. The portal has not been submitted.
 
 ## Tuesday, October 20, 2026 - registration
 

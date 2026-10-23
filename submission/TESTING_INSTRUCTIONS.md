@@ -2,7 +2,7 @@
 
 ## Hosted judge path
 
-**Unavailable.** There is no verified public HTTPS demo URL. Registration confirmation supplied for this task is timestamped October 20, 2026 at 1:29 PM Pacific, after the stated October 20, 2026 noon Pacific registration deadline. No Azure resources were deployed. Do not treat this repository as submission-ready unless the organizer grants an exception and the remaining hosted-demo and video gates are completed.
+**Unavailable.** There is no verified public HTTPS demo URL. The supplied registration confirmation is dated October 20, 2026 at 1:29 PM Eastern, before the stated 3:00 PM Eastern cutoff. No Azure resources were deployed because an approved subscription, resource group, region, budget ceiling, and explicit cost authorization were not provided. The hosted-demo and video gates remain incomplete.
 
 ## Run the accepted immutable image locally
 
