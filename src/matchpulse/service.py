@@ -465,6 +465,11 @@ def create_app() -> FastAPI:
             raise HTTPException(404, "match not found")
         return state
 
+    @app.post("/v1/matches/{match_id}/reset")
+    async def reset_match(match_id: str) -> dict[str, object]:
+        existed = app.state.pipeline.state.reset(match_id)
+        return {"match_id": match_id, "reset": True, "existed": existed}
+
     @app.get("/v1/matches/{match_id}/recap", response_model=MatchRecap)
     async def recap(match_id: str, profile_id: str = Query("fan-en"),
                     locale: str | None = Query(None)) -> MatchRecap:

@@ -22,6 +22,37 @@ def test_health_checks_do_not_consume_foundry_call_budget(monkeypatch):
         assert client.get("/health/live").status_code == 200
         assert client.get("/health/ready").status_code == 200
         assert app.state.foundry.remaining_calls == 1
+        assert app.state.foundry.counters["attempted"] == 0
+
+
+def test_reset_makes_no_model_calls_and_clears_match_state(monkeypatch):
+    monkeypatch.setenv("FOUNDRY_ENDPOINT", "https://example.test")
+    monkeypatch.setenv("FOUNDRY_DEPLOYMENT", "model")
+    monkeypatch.setenv("FOUNDRY_AUTH_MODE", "managed_identity")
+    monkeypatch.setenv("FOUNDRY_CALL_BUDGET", "5")
+    app = create_app()
+    with TestClient(app) as client:
+        event = {
+            "match_id": "reset-demo",
+            "sequence": 1,
+            "clock_ms": 45000,
+            "event_type": "shot",
+            "team_id": "Riverside-Athletic",
+            "player_id": "RA-9",
+            "outcome": "on_target",
+            "speed_kmh": 108,
+            "source": "synthetic",
+        }
+        assert client.post("/v1/events", json=event).status_code == 202
+        assert client.get("/v1/matches/reset-demo/state").status_code == 200
+        remaining_before = app.state.foundry.remaining_calls
+        attempted_before = app.state.foundry.counters["attempted"]
+        reset_resp = client.post("/v1/matches/reset-demo/reset")
+        assert reset_resp.status_code == 200
+        assert reset_resp.json() == {"match_id": "reset-demo", "reset": True, "existed": True}
+        assert app.state.foundry.remaining_calls == remaining_before
+        assert app.state.foundry.counters["attempted"] == attempted_before
+        assert client.get("/v1/matches/reset-demo/state").status_code == 404
 
 
 def test_ingest_state_and_recap():

@@ -115,10 +115,6 @@ jobs:
             --parameters foundryAuthMode=managed_identity
 
       - name: Publish summary
-        run: |
-          {
-            echo "### Azure deployment"
-      - name: Publish summary
         env:
           AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }}
@@ -127,5 +123,4 @@ jobs:
             echo "### Azure deployment"
             echo "Resource group: ${AZURE_RESOURCE_GROUP}"
             echo "Container app: ${CONTAINER_APP_NAME}"
-          } >> "$GITHUB_STEP_SUMMARY"
           } >> "$GITHUB_STEP_SUMMARY"
