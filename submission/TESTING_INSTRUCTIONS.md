@@ -1,28 +1,27 @@
-# Testing instructions for judges
+# Testing instructions
 
-## Run the published image (no setup required)
+## Hosted judge path
 
-The audited image is published to the GitHub Container Registry and is
-readable without any credential:
+**Unavailable.** There is no verified public HTTPS demo URL. Registration confirmation supplied for this task is timestamped October 20, 2026 at 1:29 PM Pacific, after the stated October 20, 2026 noon Pacific registration deadline. No Azure resources were deployed. Do not treat this repository as submission-ready unless the organizer grants an exception and the remaining hosted-demo and video gates are completed.
+
+## Run the accepted immutable image locally
+
+The following image reference is the previously accepted artifact supplied for this task. It is pinned by digest; this command does not prove that a public demo is available:
 
 ```bash
 docker run --rm -p 8080:8080 \
-  ghcr.io/ofayese/matchpulse-live@<FINAL_IMAGE_DIGEST>
+  ghcr.io/ofayese/matchpulse-live@sha256:1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c
 ```
 
-Then open <http://127.0.0.1:8080/demo>.
+Open `http://127.0.0.1:8080/demo` on the same machine. This local flow requires Docker and is not a terminal-free hosted judge path.
 
-| Property | Value |
-| -------- | ----- |
-| Tag | `challenge-2026-submission` |
-| Digest | `<FINAL_IMAGE_DIGEST>` |
-| Source commit | `055392dfd53ad136c4fa0cc62659538e35da02cf` |
-| Runtime user | `10001:10001` |
-| Platform | `linux/amd64` |
+Artifact references supplied for the accepted release:
 
+- Candidate revision: `e228610a6d220f5532b0d8d3baac0a629db14208`
+- Image digest: `sha256:1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c`
+- Attestation identifier: `58474240` (historical result must retain its recorded conclusion)
 
-
-## Local build
+## Build and run from source
 
 Requirements: Python 3.11+ or Docker.
 
@@ -44,21 +43,20 @@ Open `http://127.0.0.1:8080/demo`.
 
 ## Expected behavior
 
-- `/health/ready` returns `synthetic_only: true`.
-- Valid ordered events return HTTP 202.
+- `/health/ready` reports `synthetic_only: true`.
+- Valid ordered synthetic events return HTTP 202.
 - Duplicate event IDs are acknowledged without duplicating state.
 - Out-of-order events return HTTP 409.
-- Any non-synthetic source value fails schema validation.
-- Each insight includes source event IDs, calculation inputs, a formula, and confidence.
+- Non-synthetic source values fail schema validation.
+- Insights include source event IDs, calculation inputs, a formula, and confidence.
 - English, Spanish, and French variants retain the same evidence.
-- With no Foundry credentials, `foundry_mode` reports `disabled` and the full demo still works.
-- A demo run returns a unique `demo-<id>` match, accepts at most 24 events, and
-  refuses a second run with HTTP 409 while one is in flight or HTTP 429 during
-  the cooldown window.
+- Without Foundry credentials, `foundry_mode` reports `disabled`; the deterministic demo remains available.
+- A demo run has a unique match identifier, accepts at most 24 events, permits one concurrent run, and enforces a cooldown.
 
 ## Known MVP limits
 
 - State is in process memory; restarting clears the demo match.
 - Multi-replica WebSocket fan-out needs a managed backplane before production scale.
-- Event Hubs is NOT part of the deployed baseline; no consumer, checkpoint store, or processed-message trace exists. The submitted HTTP MVP uses `POST /v1/events`.
-- Languages beyond en/es/fr require reviewed templates or a translation adapter.
+- Event Hubs is not deployed and has no active consumer, checkpoint store, or processed-message trace. The baseline uses `POST /v1/events`.
+- A live Foundry call, managed identity, Azure deployment, and Application Insights evidence have not been verified.
+- Languages beyond English, Spanish, and French need reviewed templates or a translation adapter.

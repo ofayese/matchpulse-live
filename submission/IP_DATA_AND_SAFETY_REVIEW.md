@@ -1,15 +1,15 @@
-# IP, data, and safety review template
+# IP, data, and safety review — incomplete
 
 Complete this before publication. It is a verification worksheet, not a pre-signed legal declaration.
 
 ## Entrant ownership
 
-- Entrant/representative: `<NAME>`
-- Team/organization: `<IF APPLICABLE>`
-- Public repository: `<URL>`
-- Submission commit: `<SHA>`
-- Contributors reviewed: `<NAMES>`
-- Third-party code/licenses reviewed: `<RESULT>`
+- Entrant/representative: Not supplied by entrant.
+- Team/organization: Not supplied by entrant.
+- Public repository: https://github.com/ofayese/matchpulse-live
+- Submission commit: Not frozen; working branch is not merged.
+- Contributors reviewed: Not confirmed.
+- Third-party code/licenses reviewed: Not confirmed by entrant.
 
 ## Synthetic data statement
 

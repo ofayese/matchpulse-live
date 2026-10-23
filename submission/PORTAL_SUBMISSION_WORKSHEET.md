@@ -1,50 +1,44 @@
-# Portal Submission Worksheet
+# Portal submission worksheet — blocked pending organizer exception
 
-This document contains the information that needs to be manually entered into the challenge submission portal.
+This worksheet is preparation only. The challenge portal has not been submitted.
 
-**Project name:**
-MatchPulse Live
+## Project fields
 
-**Primary category:**
-Best Multi-Agent System
+- **Project name:** MatchPulse Live
+- **Primary category:** Best Multi-Agent System
+- **Secondary category:** Leave blank unless the portal allows multiple categories and the organizer confirms eligibility.
+- **Repository:** https://github.com/ofayese/matchpulse-live
+- **Working branch:** `chore/final-challenge-submission`
+- **Authoritative release tag:** `challenge-2026-submission` already exists at a prior commit. Do not move or represent it as this working branch.
+- **Accepted published image:** `ghcr.io/ofayese/matchpulse-live@sha256:1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c`
+- **Accepted artifact candidate:** `e228610a6d220f5532b0d8d3baac0a629db14208`
+- **Hosted demo:** Not available. No Azure deployment was created because registration confirmation arrived after the stated registration deadline; an organizer exception is required before any billable work.
+- **Demo video:** Not available. No recording or upload has been represented as complete.
 
-**Secondary category:**
-Enterprise, only if permitted
+## Pitch
 
-**Elevator pitch:**
-MatchPulse Live: Real-time, personalized football storytelling for every fan.
+MatchPulse Live turns synthetic football events into evidence-linked match insights, then adapts the same verified moment for fans, analysts, and broadcasters in multiple languages.
 
-**Project description:**
-Football viewers do not all want the same story. An analyst wants derivations and context, a broadcaster needs concise copy timed to live play, and a casual fan wants an immediate explanation in their language. Most systems either produce raw metrics with no audience or polished text with weak factual grounding.
+## Verified description
 
-MatchPulse Live is a new AI-assisted real-time storytelling module that turns synthetic football events into explainable match intelligence and personalized audience experiences. A strict event API accepts passes, shots, goals, tackles, pressure, possession, and match metadata. The interpretation agent maintains live team state and derives pass difficulty, shot-speed highlights, pressing surges, possession swings, and high regains. The explainability agent blocks any output that lacks source event IDs, calculation inputs, and a formula or threshold.
+MatchPulse Live is a synthetic-data prototype for real-time football storytelling. Its local pipeline interprets event sequences, attaches source event IDs and calculation details, and renders audience-specific narratives in English, Spanish, and French. A guarded optional Microsoft Foundry adapter can rewrite copy while deterministic rendering remains available as fallback. The repository includes an Azure Container Apps Bicep deployment path and optional Application Insights telemetry configuration; neither a live Azure deployment nor a live Foundry call is verified for this submission. State is in process memory, and Event Hubs has no active consumer in the submitted baseline.
 
-The personalization agent then ranks each grounded moment using persona, favorite club/player, metric interests, severity, and detail level. A curated multilingual renderer produces distinct analyst, fan, and broadcaster narratives in English, Spanish, and French. The same insight ID and evidence remain intact across variants, so judges can compare personalization without losing provenance. Outputs are available as timed WebSocket overlays, API responses, a responsive browser demo, and automated profile-specific recaps.
+## Technologies supported by repository evidence
 
-The optional Microsoft Foundry adapter serves as a constrained copy editor. It cannot create match facts: invalid JSON, timeout, or any new numeric claim causes a deterministic fallback. The Azure deployment path uses Container Apps for the service and Application Insights for operational telemetry. GitHub Actions runs linting, tests, preflight, coverage, a container build, and a blocking vulnerability gate.
+Python, FastAPI, Docker, Bicep deployment templates, GitHub Actions, GitHub Container Registry, GitHub artifact attestations, deterministic synthetic event generation, optional guarded Microsoft Foundry adapter, optional Application Insights telemetry configuration.
 
-MatchPulse Live uses only seeded synthetic data. The public demo contains no real match footage, private player information, club credentials, copyrighted music, or third-party branding. The module remains isolated from the parent platform's player-dispatch and approval capabilities.
+## Judge testing
 
-**Public repository:**
-https://github.com/ofayese/matchpulse-live
+No-login hosted judge testing is unavailable. The existing instructions describe local execution and do not provide a verified public demo URL. Do not enter a guessed URL. The portal submission remains blocked until an organizer exception is granted, a hosted demo and video are produced, and their public links are tested signed out.
 
-**Authoritative source:**
-challenge-2026-submission
+## Known limitations
 
-**Working project or test build:**
-The project can be run locally using Docker. The instructions can be found in `submission/TESTING_INSTRUCTIONS.md`.
+- Match state is in process memory and resets when the process restarts.
+- WebSocket fan-out is limited to one replica without a managed backplane.
+- Event Hubs is not deployed; the baseline ingests events over HTTP.
+- Azure deployment, managed identity, live Foundry inference, and Application Insights evidence are not verified.
+- No public hosted demo or video URL is verified.
 
-**Demo video:**
-[Human-supplied and verified public URL]
+## Human-provided fields
 
-**Technologies:**
-Microsoft Foundry (integration-ready), Azure Container Apps (deployment-ready Bicep), Application Insights (integration-ready), Managed Identity (integration-ready), GitHub Actions, GitHub Container Registry, GitHub artifact attestations, Bicep, Docker, Synthetic-data pipeline, Multi-agent coordination.
-
-**Eligibility representations:**
-[Human-confirmed checklist]
-
-**Team members:**
-[Human-provided]
-
-**Submission owner:**
-[Human-provided]
+Team members, authorized representative, and every eligibility attestation must be supplied and confirmed by the entrant. The registration email provided for this review is timestamped after the stated deadline; organizer confirmation of an exception is required before asserting eligibility.
