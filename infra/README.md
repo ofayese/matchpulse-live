@@ -1,9 +1,8 @@
 # Azure deployment
 
-`infra/main.bicep` creates Azure Container Apps, Log
-Analytics, and Application Insights. It does **not** create a Foundry
-project or model deployment: those are usually managed in a separate AI
-project and depend on an entrant-selected model and region.
+`infra/main.bicep` creates Azure Container Apps, Log Analytics, and
+Application Insights. It does **not** create the Azure OpenAI account or model
+deployment; those require a separate approved operation.
 
 ## Validate first
 
@@ -26,28 +25,37 @@ powershell -ExecutionPolicy Bypass -File infra\validate.ps1
 
 ```bash
 az deployment group create \
+  --subscription <approved-subscription-id> \
   --resource-group <approved-resource-group> \
   --template-file infra/main.bicep \
   --parameters prefix=matchpulse \
-  --parameters image=ghcr.io/ofayese/matchpulse-live@sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90
+  --parameters @infra/main.parameters.example.json
 ```
 
-`main.parameters.example.json` holds the same non-secret parameter set with a
-placeholder digest. The digest above is the audited, published image for
-source commit `e8289265dc1920a2f313a9ec45ebf748591a3071`.
+`main.parameters.example.json` holds the non-secret parameter set and accepted
+immutable image digest. Review the values and endpoint before deployment.
 
 ## Foundry
 
-The template accepts a `foundryRuntimeMode` parameter (`off` by default,
-`validate` to opt in) plus `foundryEndpoint`, `foundryDeployment`, and
-`foundryAuthMode` (only effective in `validate` mode). The preferred mode is `managed_identity`: the Container App
-gets a system-assigned identity and the service acquires a token through
-`DefaultAzureCredential`. There is **no secret parameter** in the template.
-In `off` mode there is no Foundry endpoint, deployment name, API key, or
-model inference, and therefore no public Foundry spend.
+The template accepts `foundryRuntimeMode` (`off` by default, `validate` to opt
+in), `foundryEndpoint`, `foundryDeployment`, and `foundryAuthMode`. Azure
+OpenAI is recommended because the application adapter uses the Azure OpenAI
+chat-completions route. The endpoint must come from the approved created
+account; never commit a proposed endpoint as active. The Container App uses a
+system-assigned identity and requests a token through `DefaultAzureCredential`.
+No key parameter exists. In `off` mode there is no model inference.
 
 A local API key remains available for hackathon testing only, supplied at
 runtime through `FOUNDRY_API_KEY` and never committed.
+
+The workspace uses `workspaceCapping.dailyQuotaGb` with the supported 0.023
+GB/day minimum. Cap overshoot may be billed, and reaching the cap can pause log
+ingestion. Container Apps console and system logs are routed to the workspace;
+HTTP diagnostic categories remain disabled. The app adapter makes one model
+request attempt, times out at 1.4 seconds by default, limits output to 128
+tokens and prompt payload to 4 KiB, then uses deterministic fallback. Its
+per-process call budget resets on restart. These controls are not a hard billing
+stop.
 
 ## After deployment
 

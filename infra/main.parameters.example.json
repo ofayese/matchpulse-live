@@ -6,7 +6,7 @@
       "value": "matchpulse"
     },
     "image": {
-      "value": "ghcr.io/OWNER/matchpulse-live@sha256:REPLACE_WITH_THE_VERIFIED_IMMUTABLE_DIGEST"
+      "value": "ghcr.io/ofayese/matchpulse-live@sha256:1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c"
     },
     "foundryRuntimeMode": {
       "value": "off"
@@ -15,19 +15,22 @@
       "value": ""
     },
     "foundryDeployment": {
-      "value": ""
+      "value": "matchpulse-narrative"
     },
     "foundryAuthMode": {
       "value": "managed_identity"
     },
-    "enableMonitoring": {
+    "monitoringEnabled": {
       "value": true
     },
-    "logRetentionInDays": {
-      "value": 7
+    "logRetentionDays": {
+      "value": 30
     },
-    "dailyQuotaGb": {
-      "value": 1
+    "logDailyQuotaGb": {
+      "value": "0.023"
+    },
+    "foundryCallBudget": {
+      "value": 20
     },
     "minReplicas": {
       "value": 0

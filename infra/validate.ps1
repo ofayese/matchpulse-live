@@ -38,3 +38,10 @@ if ($fail) {
 }
 
 Write-Output 'PASS: Bicep compiles and contains no hardcoded identifiers or secrets'
+$validator = Join-Path $root 'infra\validate_template.py'
+Write-Output '==> Checking challenge infrastructure guardrails'
+& python $validator $compiled
+if ($LASTEXITCODE -ne 0) {
+    Write-Error 'Infrastructure guardrail validation failed'
+    exit 1
+}

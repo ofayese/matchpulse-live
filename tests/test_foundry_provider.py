@@ -80,6 +80,55 @@ def test_valid_guarded_foundry_response_is_applied():
     assert client.state == STATE_VERIFIED
 
 
+def test_model_request_has_bounded_completion_tokens():
+    seen: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.update(json.loads(request.content))
+        return _completion(json.dumps({
+            "title": "Faster shot",
+            "body": "A shot reached 101 km/h.",
+            "overlay_text": "101 km/h",
+        }))
+
+    client, http = _client(handler)
+    try:
+        _run(client)
+    finally:
+        asyncio.run(http.aclose())
+    assert seen["max_tokens"] == 128
+
+
+def test_oversized_prompt_falls_back_without_sending_or_spending_call_budget():
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return _completion(json.dumps({
+            "title": "Faster shot",
+            "body": "A shot reached 101 km/h.",
+            "overlay_text": "101 km/h",
+        }))
+
+    source = item().model_copy(update={
+        "evidence": Evidence(event_ids=["e1"], inputs={"speed": 101},
+                              formula="x" * 5000, confidence=.9),
+    })
+    settings = FoundrySettings("https://example.test", "model", SECRET, call_budget=1)
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = FoundryNarrativeClient(settings, http_client=http)
+    try:
+        output, warning = _run(client, source)
+        remaining = client.remaining_calls
+    finally:
+        asyncio.run(http.aclose())
+    assert output == source
+    assert warning and "prompt-budget-exceeded" in warning
+    assert calls == 0
+    assert remaining == 1
+
+
 def test_timeout_falls_back_to_deterministic_text():
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.TimeoutException("timed out")

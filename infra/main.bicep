@@ -32,17 +32,27 @@ param foundryDeployment string = ''
 param foundryAuthMode string = 'managed_identity'
 
 @description('Enable Application Insights and the Log Analytics workspace used for bounded cost-controlled monitoring.')
-param enableMonitoring bool = true
+param monitoringEnabled bool = true
 
-@description('Log Analytics retention in days.')
-@minValue(7)
-@maxValue(30)
-param logRetentionInDays int = 7
+@description('Workspace Analytics retention in days. 30 days is the minimum workspace default; shorter retention does not reduce ingestion charges.')
+@allowed([30])
+param logRetentionDays int = 30
 
-@description('Daily ingestion quota in GB. This is the explicit low cost cap for monitoring.')
+@description('Log Analytics daily ingestion cap in GB. Azure supports 0.023 GB minimum; cap overshoot can still be billed.')
+// Bicep parameters are scalar strings/integers; the allow-listed string is
+// converted to the REST API's numeric (double) quota value with json().
+@allowed([
+  '0.023'
+  '0.05'
+  '0.1'
+  '1'
+])
+param logDailyQuotaGb string = '0.023'
+
+@description('Maximum outbound Foundry calls per app process. This resets on process restart and is not a durable billing limit.')
 @minValue(1)
-@maxValue(10)
-param dailyQuotaGb int = 1
+@maxValue(20)
+param foundryCallBudget int = 20
 
 @description('Minimum container replica count. Zero keeps the workload scale to zero.')
 @minValue(0)
@@ -66,28 +76,22 @@ var environmentName = '${namePrefix}-env-${suffix}'
 var appName = '${namePrefix}-api-${suffix}'
 var insightsName = '${namePrefix}-appi-${suffix}'
 
-resource logs 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (enableMonitoring) {
+resource logs 'Microsoft.OperationalInsights/workspaces@2025-02-01' = if (monitoringEnabled) {
   name: workspaceName
   location: location
   properties: {
-    retentionInDays: logRetentionInDays
+    retentionInDays: logRetentionDays
+    workspaceCapping: {
+      dailyQuotaGb: json(logDailyQuotaGb)
+    }
     features: { enableLogAccessUsingOnlyResourcePermissions: true }
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
-  }
-  sku: { name: 'PerGB2018' }
-}
-
-// The daily quota is the explicit cost cap for the monitoring pipeline.
-resource quota 'Microsoft.OperationalInsights/workspaces/quotas@2022-10-01' = if (enableMonitoring) {
-  parent: logs
-  name: 'primary'
-  properties: {
-    dailyQuotaGB: dailyQuotaGb
+    sku: { name: 'PerGB2018' }
   }
 }
 
-resource insights 'Microsoft.Insights/components@2020-02-02' = if (enableMonitoring) {
+resource insights 'Microsoft.Insights/components@2020-02-02' = if (monitoringEnabled) {
   name: insightsName
   location: location
   kind: 'web'
@@ -106,11 +110,11 @@ resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
   properties: {
     // No workload profiles: this is the Consumption plan.
     zoneRedundant: false
-    appLogsConfiguration: enableMonitoring ? {
+    appLogsConfiguration: monitoringEnabled ? {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
-        customerId: logs.properties.customerId
-        sharedKey: logs.listKeys().primarySharedKey
+        customerId: logs!.properties.customerId
+        sharedKey: logs!.listKeys().primarySharedKey
       }
     } : {
       destination: 'none'
@@ -121,10 +125,10 @@ resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
 // No Event Hubs resource is declared. The HTTP ingestion path remains the
 // supported path until a real consumer, checkpoint and processed-message
 // trace exist.
-var insightsSecret = enableMonitoring ? [
+var insightsSecret = monitoringEnabled ? [
   {
     name: 'applicationinsights-connection-string'
-    value: insights.properties.ConnectionString
+    value: insights!.properties.ConnectionString
   }
 ] : []
 
@@ -133,7 +137,7 @@ var baseEnv = concat([
     name: 'CHALLENGE_SYNTHETIC_ONLY'
     value: 'true'
   }
-], enableMonitoring ? [
+], monitoringEnabled ? [
   {
     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
     secretRef: 'applicationinsights-connection-string'
@@ -160,6 +164,18 @@ var foundryEnv = foundryEnabled ? [
   {
     name: 'FOUNDRY_AZURE_SCOPE'
     value: 'https://cognitiveservices.azure.com/.default'
+  }
+  {
+    name: 'FOUNDRY_CALL_BUDGET'
+    value: string(foundryCallBudget)
+  }
+  {
+    name: 'FOUNDRY_MAX_CONCURRENCY'
+    value: '1'
+  }
+  {
+    name: 'FOUNDRY_TIMEOUT_SECONDS'
+    value: '1.4'
   }
 ] : []
 
@@ -239,6 +255,6 @@ output minReplicas int = minReplicas
 output maxReplicas int = maxReplicas
 output foundryRuntimeMode string = foundryRuntimeMode
 output foundryConfigured bool = foundryEnabled
-output monitoringEnabled bool = enableMonitoring
-output applicationInsightsName string = enableMonitoring ? insights.name : ''
-output logAnalyticsWorkspace string = enableMonitoring ? logs.name : ''
+output monitoringEnabled bool = monitoringEnabled
+output applicationInsightsName string = monitoringEnabled ? insights.name : ''
+output logAnalyticsWorkspace string = monitoringEnabled ? logs.name : ''

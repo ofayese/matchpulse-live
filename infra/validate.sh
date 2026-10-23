@@ -33,3 +33,6 @@ if [ "$fail" -ne 0 ]; then
 fi
 
 echo "PASS: Bicep compiles and contains no hardcoded identifiers or secrets"
+
+echo "==> Checking challenge infrastructure guardrails"
+python "$ROOT/infra/validate_template.py" "$COMPILED"
