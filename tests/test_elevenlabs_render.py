@@ -7,6 +7,10 @@ import pytest
 from scripts import matchpulse_elevenlabs_render as render
 
 
+@pytest.mark.skipif(
+    not render.SCRIPT_PATH.exists(),
+    reason="approved narration script is a local-only input",
+)
 def test_unit_windows_keep_clearance_and_final_silence() -> None:
     script = json.loads(render.SCRIPT_PATH.read_text(encoding="utf-8"))
     previous_end = 0.0
