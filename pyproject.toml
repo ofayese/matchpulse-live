@@ -27,6 +27,10 @@ azure = [
   "azure-identity>=1.19,<2",
 ]
 
+narration = [
+  "elevenlabs>=2.74,<3",
+  "python-dotenv>=1,<2",
+]
 [project.scripts]
 matchpulse = "matchpulse.__main__:main"
 matchpulse-synthetic = "matchpulse.synthetic:main"
