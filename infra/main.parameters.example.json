@@ -6,7 +6,7 @@
       "value": "matchpulse"
     },
     "image": {
-      "value": "ghcr.io/ofayese/matchpulse-live@sha256:1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c"
+      "value": "ghcr.io/ofayese/matchpulse-live@sha256:f413c32f671b191a4b3c63c8bed9c7b318ccdc60633bf222d5cba0049feaa226"
     },
     "foundryRuntimeMode": {
       "value": "off"
@@ -19,9 +19,6 @@
     },
     "foundryAuthMode": {
       "value": "managed_identity"
-    },
-    "monitoringEnabled": {
-      "value": true
     },
     "logRetentionDays": {
       "value": 30

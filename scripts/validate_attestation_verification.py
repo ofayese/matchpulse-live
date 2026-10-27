@@ -35,15 +35,21 @@ def validate_attestation(data, subject_name, subject_digest, commit):
     if not isinstance(subjects, list) or len(subjects) != 1:
         print("ERROR: Expected exactly one subject.", file=sys.stderr)
         return 1
-    
+
     subject = subjects[0]
     if subject.get("name") != subject_name:
-        print(f"ERROR: Subject name mismatch. Expected {subject_name}, got {subject.get('name')}", file=sys.stderr)
+        print(
+            f"ERROR: Subject name mismatch. Expected {subject_name}, got {subject.get('name')}",
+            file=sys.stderr,
+        )
         return 1
-    
+
     digest = subject.get("digest", {}).get("sha256")
     if digest != subject_digest:
-        print(f"ERROR: Subject digest mismatch. Expected {subject_digest}, got {digest}", file=sys.stderr)
+        print(
+            f"ERROR: Subject digest mismatch. Expected {subject_digest}, got {digest}",
+            file=sys.stderr,
+        )
         return 1
 
     # Validate commit in resolvedDependencies
@@ -56,7 +62,10 @@ def validate_attestation(data, subject_name, subject_digest, commit):
                     found_commit = True
                     break
         if not found_commit:
-            print(f"ERROR: Expected commit {commit} not found in resolvedDependencies.", file=sys.stderr)
+            print(
+                f"ERROR: Expected commit {commit} not found in resolvedDependencies.",
+                file=sys.stderr,
+            )
             return 1
     except (KeyError, TypeError) as e:
         print(f"ERROR: Could not resolve commit in predicate: {e}", file=sys.stderr)
@@ -65,13 +74,14 @@ def validate_attestation(data, subject_name, subject_digest, commit):
     print("SUCCESS: Attestation validation passed.", file=sys.stderr)
     return 0
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Validate attestation verification JSON.")
     parser.add_argument("--input", required=True, help="Path to the verification JSON file.")
     parser.add_argument("--subject-name", required=True, help="Expected subject name.")
     parser.add_argument("--subject-digest", required=True, help="Expected subject digest (sha256).")
     parser.add_argument("commit", help="Expected git commit SHA.")
-    
+
     args = parser.parse_args()
 
     try:

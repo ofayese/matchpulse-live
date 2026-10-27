@@ -1,6 +1,14 @@
 # MatchPulse Live architecture
 
-**Status:** implementation-ready MVP with a tested local path and an Azure deployment template. Azure resources, public URL, and Foundry credentials still require entrant deployment.
+**Status:** the immutable Azure Container Apps candidate passed hosted
+validation. A fresh read-only check on 2026-10-26 confirmed the configured
+image digest and no ingress configuration. No Foundry runtime setting or
+model deployment was found; the recorded run made zero model calls. The
+resource-group inventory returned seven resources, including a Cognitive
+Services account and project, rather than the earlier expected five. The
+current checkout contains post-deployment local changes that are not included
+in the deployed image. This document describes the current source design
+unless it explicitly identifies deployed state.
 
 ## 1. Outcomes
 
@@ -18,7 +26,7 @@ Target service objectives for the submission demo:
 | Objective | Target | Design control |
 |---|---:|---|
 | Deterministic ingest-to-overlay p95 | < 750 ms | In-process state, bounded work, no model dependency |
-| Foundry-enriched insight p95 | < 2.5 s | 1.4 s model timeout, fallback to deterministic copy |
+| **ROADMAP — NOT IN CURRENT SUBMISSION** optional Foundry-enriched insight p95 | < 2.5 s | Target only if separately enabled; 1.4 s timeout and deterministic fallback |
 | Event loss in local demo | 0 accepted events | Event ID idempotency + monotonic sequence check |
 | Unsupported factual claims | 0 | Evidence gate + model numeric-claim guard |
 | Supported demo languages | 3 | Curated template catalogs for en/es/fr |
@@ -35,39 +43,74 @@ flowchart LR
   Q -->|source=synthetic, ordered, new ID| ST[Match state accumulator]
   Q -->|duplicate| ID[Idempotent acknowledgement]
   Q -->|bad source/order| RJ[Reject]
-  ST --> A1[Interpretation agent]
-  A1 --> A2[Explainability agent]
-  A2 -->|event IDs + formula + inputs| A3[Personalization agent]
+  ST --> A1[Deterministic football interpretation]
+  A1 --> A2[Evidence validation]
+  A2 -->|event IDs + formula + inputs| A3[Profile personalization]
   A3 --> L[en / es / fr narrative renderer]
-  L --> F{Foundry configured?}
-  F -->|yes| FR[Constrained Foundry copy edit]
-  F -->|no / timeout / invalid| DF[Deterministic fallback]
-  FR --> NG{Grounding guard}
-  NG -->|valid| WS[WebSocket overlay + API response]
-  NG -->|new number / invalid JSON| DF
-  DF --> WS
+  L --> DF[Deterministic narrative and fallback]
+  DF --> WS[HTTP API + WebSocket overlay]
   ST --> R[Profile-specific recap]
 ```
 
-### One pipeline, five challenge stages
+### One specialized processing pipeline, five challenge stages
 
 | Challenge stage | MatchPulse component | Output |
 |---|---|---|
 | Ingest | `POST /v1/events`, batch API, seeded generator | Validated event with source, sequence, and clock |
-| Interpret | `MatchAccumulator` + interpretation agent | Team state, pass difficulty, shot speed, pressing windows, possession swing |
-| Explain | Explainability agent | Evidence event IDs, calculation inputs, formula, confidence |
+| Interpret | `MatchAccumulator` and deterministic rules | Team state, pass difficulty, shot speed, pressing windows, possession swing |
+| Explain | Evidence validation stage | Evidence event IDs, calculation inputs, formula, confidence |
 | Render | Narrative/localization catalog + WebSocket | Timed overlay payload and browser demo |
 | Personalize | Profile score + persona/detail/locale renderer | Analyst, fan, and broadcaster variants from one insight |
 
-## 3. Purposeful agent design
+## 3. Specialized processing stages
 
-- **Supervisor agent:** owns handoffs, shared state, warnings, and failure isolation.
-- **Interpretation agent:** converts one accepted event into zero or more football signals. It is deterministic and testable.
-- **Explainability agent:** blocks any signal whose referenced events do not exist or whose derivation is missing.
-- **Personalization agent:** scores relevance using persona, favorite club/player, metric interests, and severity; it also selects compact, standard, or deep detail.
-- **Foundry narrative adapter (optional):** copy-edits grounded text only. It cannot alter evidence or stats. New numeric claims, malformed JSON, timeout, or service errors trigger a deterministic fallback.
+The Python classes in `src/matchpulse/agents.py` include legacy `Agent`
+suffixes, but the implementation is a deterministic processing pipeline, not
+an autonomous or multi-agent system. Each stage is ordinary application code:
 
-A single model prompt does not perform the entire job. Each agent has a distinct contract, shared state is explicit, handoffs are measured, and failures are contained.
+- **Event interpretation:** applies event rules and updates shared in-process
+  match state.
+- **Evidence validation:** rejects an insight if its referenced events or
+  derivation are missing.
+- **Profile personalization:** scores relevance and selects detail using the
+  persona, favorites, metric interests, and severity.
+- **Localization:** renders deterministic English, Spanish, and French text.
+- **ROADMAP — NOT IN CURRENT SUBMISSION** — The optional Foundry adapter can
+  copy-edit grounded text only when separately configured. It cannot alter
+  evidence or stats; unsupported numbers, malformed JSON, timeouts, and
+  service errors use deterministic output. It was off in the validated
+  deployment, which made zero model calls.
+
+The source contains a coordinator that calls these components, but it does
+not make them autonomous agents or use a model to choose tools or actions.
+
+## 3a. Submission trace decision — documentation only
+
+`AGENT_TRACE_DECISION=DEFERRED`
+
+The supervisor currently measures its internal interpretation, evidence-check,
+and personalization handoffs, but the event API discards those handoff records.
+The application does expose evidence event IDs and derivation details on
+insights, and evidence event IDs on recaps and audience variants; it does not
+return a sanitized handoff trace or render a dedicated “Why this insight?”
+expander.
+
+This submission therefore claims evidence-grounded processing, not a visible
+agent-handoff trace or autonomous multi-agent behavior. A future additive trace
+could expose a shared evidence ID, runtime mode, grounding status, and
+sanitized stage status and duration. Stage names must come only from actual
+code-reported handoffs (`interpretation-agent`, `explainability-agent`, and
+`personalization-agent`); localization is not an `AgentHandoff` stage. A
+compact accessible `<details>` view could show this metadata beside the
+existing evidence, with no chain-of-thought, prompts, model responses,
+exception details, profile identifiers, paths, credentials, or Azure resource
+IDs.
+
+The trace is deferred because publication blockers take priority, the approved
+video does not show it, runtime/API/UI work could create inconsistencies, no
+deployment is authorized, and regression plus publication work comes first.
+The voice-rights review also remains unresolved. No runtime or video change is
+made for this deferred design.
 
 ## 4. Real-time match state and explainability
 
@@ -136,17 +179,36 @@ rejected. Exporter failures are contained and never break a request.
 ## 6. Cloud deployment architecture
 
 ```mermaid
-flowchart TB
-  P[Seeded synthetic producer] -->|POST /v1/events| CA[Azure Container Apps - MatchPulse]
-  CA --> FA[Microsoft Foundry deployment (validate mode only)]
-  CA --> AI[Application Insights]
-  CA --> WSS[HTTPS / WebSocket ingress]
-  WSS --> UI[Browser overlay]
-  CA -. production extension .-> DB[(Azure PostgreSQL / Fabric Eventhouse)]
-  KV[Azure Key Vault] -. secret injection .-> CA
+flowchart LR
+  P[Seeded synthetic producer] -->|POST /v1/events| CA[MatchPulse runtime in Azure Container Apps]
+  subgraph APP[Deterministic pipeline coordinated by SupervisorAgent]
+    CA --> V[Schema, synthetic-only, ordering and idempotency validation]
+    V --> S[InterpretationAgent: in-memory state and football rules]
+    S --> E[Evidence-backed insight]
+    E --> X[ExplainabilityAgent: evidence validation]
+    X --> PV[PersonalizationAgent: profile variants and en / es / fr localization]
+    PV --> FB[Deterministic narrative and fallback]
+    FB --> API[HTTP API, recaps and WebSocket]
+  end
+  API -->|Local demo only while ingress is disabled| UI[Browser overlay]
+  CA -. platform/container logs .-> LA[Log Analytics: 30-day retention, 0.023 GB/day cap]
+  CA -. resource provisioned; custom app exporter not verified .-> AI[Application Insights]
 ```
 
-The supplied Bicep deploys Container Apps, Log Analytics, and Application Insights. The MVP accepts HTTP events directly via `POST /v1/events` so judges can test it without another producer. Event Hubs is NOT part of the deployed baseline; no consumer, checkpoint store, or processed-message trace exists. A production deployment should add durable event/state persistence; these are intentionally outside the seven-day challenge MVP.
+`SupervisorAgent`, `InterpretationAgent`, `ExplainabilityAgent`, and
+`PersonalizationAgent` are synchronous deterministic code components. They are
+not autonomous model-driven agents or a model-planning loop; localization is
+handled by deterministic catalogs.
+
+The deployed Container App has no ingress configuration in the fresh
+2026-10-26 read-only ARM response. The supplied template provisions Container
+Apps, Log Analytics, and Application Insights. The app
+accepts HTTP events directly; Event Hubs is not deployed and no consumer,
+checkpoint store, or processed-message trace exists. The configured replica
+range is 0–1 because state and WebSocket subscriptions are process-local.
+Application Insights is provisioned, but custom application telemetry is not
+verified for the deployed image. A production deployment would require durable
+state/replay and a shared WebSocket backplane before scale-out.
 
 ## 7. Deployment boundary
 
@@ -186,9 +248,9 @@ outside the challenge MVP.
 
 ## 10. Decisions deferred beyond submission
 
-- Durable multi-region state and replay checkpoints.
-- Human-reviewed expansion beyond en/es/fr.
-- Automatic computer vision eventing from licensed footage.
-- Fabric Eventhouse dashboards and offline model evaluation.
-- Per-user authentication, consent, and preference persistence.
-- Load-tested multi-replica WebSocket fan-out through a managed backplane.
+- **ROADMAP — NOT IN CURRENT SUBMISSION** — Durable multi-region state and replay checkpoints.
+- **ROADMAP — NOT IN CURRENT SUBMISSION** — Human-reviewed expansion beyond en/es/fr.
+- **ROADMAP — NOT IN CURRENT SUBMISSION** — Automatic computer vision eventing from licensed footage.
+- **ROADMAP — NOT IN CURRENT SUBMISSION** — Fabric Eventhouse dashboards and offline model evaluation.
+- **ROADMAP — NOT IN CURRENT SUBMISSION** — Per-user authentication, consent, and preference persistence.
+- **ROADMAP — NOT IN CURRENT SUBMISSION** — Load-tested multi-replica WebSocket fan-out through a managed backplane.

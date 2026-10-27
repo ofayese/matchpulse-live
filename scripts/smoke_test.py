@@ -37,12 +37,18 @@ async def websocket_check(base_url: str) -> bool:
         import websockets
     except ImportError:
         return check("websocket dependency available", False, "install 'websockets'")
-    ws_base = base_url.replace("http://", "ws://").replace("https://", "wss://").rstrip("/")
+    ws_base = (
+        base_url.replace("http://", "ws://").replace("https://", "wss://").rstrip("/")
+    )
     uri = f"{ws_base}/ws/matches/{WEBSOCKET_MATCH_ID}?profile_id=fan-en"
     try:
         async with websockets.connect(uri, open_timeout=10) as socket:
             welcome = json.loads(await asyncio.wait_for(socket.recv(), timeout=10))
-            if not check("websocket welcome frame", welcome.get("type") == "welcome", json.dumps(welcome)[:120]):
+            if not check(
+                "websocket welcome frame",
+                welcome.get("type") == "welcome",
+                json.dumps(welcome)[:120],
+            ):
                 return False
             event = {
                 "match_id": WEBSOCKET_MATCH_ID,
@@ -61,7 +67,8 @@ async def websocket_check(base_url: str) -> bool:
             frame = json.loads(await asyncio.wait_for(socket.recv(), timeout=15))
             return check(
                 "websocket overlay frame",
-                frame.get("profile_id") == "fan-en" and bool(frame.get("evidence", {}).get("event_ids")),
+                frame.get("profile_id") == "fan-en"
+                and bool(frame.get("evidence", {}).get("event_ids")),
                 json.dumps(frame)[:160],
             )
     except Exception as exc:
@@ -72,7 +79,9 @@ async def run(base_url: str) -> int:
     failures = 0
     async with httpx.AsyncClient(base_url=base_url, timeout=20) as client:
         live = await client.get("/health/live")
-        failures += not check("GET /health/live", live.status_code == 200, live.text[:120])
+        failures += not check(
+            "GET /health/live", live.status_code == 200, live.text[:120]
+        )
 
         ready = await client.get("/health/ready")
         payload = ready.json() if ready.status_code == 200 else {}
@@ -97,7 +106,11 @@ async def run(base_url: str) -> int:
         )
 
         demo = await client.get("/demo")
-        failures += not check("GET /demo", demo.status_code == 200 and "MatchPulse" in demo.text, demo.text[:80])
+        failures += not check(
+            "GET /demo",
+            demo.status_code == 200 and "MatchPulse" in demo.text,
+            demo.text[:80],
+        )
 
         event = {
             "match_id": DEMO_MATCH_ID,
@@ -117,7 +130,9 @@ async def run(base_url: str) -> int:
             ingest.text[:160],
         )
 
-        rejected = await client.post("/v1/events", json={**event, "sequence": 2, "source": "real"})
+        rejected = await client.post(
+            "/v1/events", json={**event, "sequence": 2, "source": "real"}
+        )
         failures += not check(
             "POST /v1/events rejects a non-synthetic source",
             rejected.status_code == 422,
@@ -125,13 +140,19 @@ async def run(base_url: str) -> int:
         )
 
         state = await client.get(f"/v1/matches/{DEMO_MATCH_ID}/state")
-        failures += not check("GET /v1/matches/{id}/state", state.status_code == 200, state.text[:120])
+        failures += not check(
+            "GET /v1/matches/{id}/state", state.status_code == 200, state.text[:120]
+        )
 
-        recap = await client.get(f"/v1/matches/{DEMO_MATCH_ID}/recap", params={"profile_id": "analyst-en"})
+        recap = await client.get(
+            f"/v1/matches/{DEMO_MATCH_ID}/recap", params={"profile_id": "analyst-en"}
+        )
         recap_payload = recap.json() if recap.status_code == 200 else {}
         failures += not check(
             "GET /v1/matches/{id}/recap",
-            recap.status_code == 200 and recap_payload.get("locale") == "en" and bool(recap_payload.get("evidence_event_ids")),
+            recap.status_code == 200
+            and recap_payload.get("locale") == "en"
+            and bool(recap_payload.get("evidence_event_ids")),
             recap.text[:160],
         )
 
@@ -141,7 +162,9 @@ async def run(base_url: str) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="MatchPulse Live API and WebSocket smoke test")
+    parser = argparse.ArgumentParser(
+        description="MatchPulse Live API and WebSocket smoke test"
+    )
     parser.add_argument("--url", default=DEFAULT_URL)
     args = parser.parse_args()
     return asyncio.run(run(args.url))

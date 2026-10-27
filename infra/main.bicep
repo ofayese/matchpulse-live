@@ -8,6 +8,9 @@ param prefix string = 'matchpulse'
 @description('Location for all resources. Defaults to the resource group location.')
 param location string = resourceGroup().location
 
+@description('When true, create the monitoring and Container Apps environment foundation. When false, reference the existing foundation and deploy only the application.')
+param deployFoundationResources bool = true
+
 @description('The deployed image must be pinned to an immutable digest, for example ghcr.io/OWNER/REPO@sha256:DIGEST.')
 param image string
 
@@ -30,9 +33,6 @@ param foundryDeployment string = ''
   'disabled'
 ])
 param foundryAuthMode string = 'managed_identity'
-
-@description('Enable Application Insights and the Log Analytics workspace used for bounded cost-controlled monitoring.')
-param monitoringEnabled bool = true
 
 @description('Workspace Analytics retention in days. 30 days is the minimum workspace default; shorter retention does not reduce ingestion charges.')
 @allowed([30])
@@ -75,74 +75,32 @@ var workspaceName = '${namePrefix}-logs-${suffix}'
 var environmentName = '${namePrefix}-env-${suffix}'
 var appName = '${namePrefix}-api-${suffix}'
 var insightsName = '${namePrefix}-appi-${suffix}'
-
-resource logs 'Microsoft.OperationalInsights/workspaces@2025-02-01' = if (monitoringEnabled) {
-  name: workspaceName
-  location: location
-  properties: {
-    retentionInDays: logRetentionDays
-    workspaceCapping: {
-      dailyQuotaGb: json(logDailyQuotaGb)
-    }
-    features: { enableLogAccessUsingOnlyResourcePermissions: true }
-    publicNetworkAccessForIngestion: 'Enabled'
-    publicNetworkAccessForQuery: 'Enabled'
-    sku: { name: 'PerGB2018' }
-  }
-}
-
-resource insights 'Microsoft.Insights/components@2020-02-02' = if (monitoringEnabled) {
-  name: insightsName
-  location: location
-  kind: 'web'
-  properties: {
-    Application_Type: 'web'
-    WorkspaceResourceId: logs.id
-    IngestionMode: 'Basic'
-    publicNetworkAccessForIngestion: 'Enabled'
-    publicNetworkAccessForQuery: 'Enabled'
-  }
-}
-
-resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: environmentName
-  location: location
-  properties: {
-    // No workload profiles: this is the Consumption plan.
-    zoneRedundant: false
-    appLogsConfiguration: monitoringEnabled ? {
-      destination: 'log-analytics'
-      logAnalyticsConfiguration: {
-        customerId: logs!.properties.customerId
-        sharedKey: logs!.listKeys().primarySharedKey
-      }
-    } : {
-      destination: 'none'
-    }
-  }
-}
+var selectedEnvironmentId = resourceId('Microsoft.App/managedEnvironments', environmentName)
+var selectedAppInsightsConnectionString = deployFoundationResources
+  ? insights!.properties.ConnectionString
+  : appInsightsExisting.properties.ConnectionString
 
 // No Event Hubs resource is declared. The HTTP ingestion path remains the
 // supported path until a real consumer, checkpoint and processed-message
 // trace exist.
-var insightsSecret = monitoringEnabled ? [
+var insightsSecret = [
   {
     name: 'applicationinsights-connection-string'
-    value: insights!.properties.ConnectionString
+    value: selectedAppInsightsConnectionString
   }
-] : []
+]
 
 var baseEnv = concat([
   {
     name: 'CHALLENGE_SYNTHETIC_ONLY'
     value: 'true'
   }
-], monitoringEnabled ? [
+], [
   {
     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
     secretRef: 'applicationinsights-connection-string'
   }
-] : [])
+])
 
 // Foundry is off by default: no endpoint, no deployment name, no API key and
 // therefore no model inference and no public spend.
@@ -179,19 +137,86 @@ var foundryEnv = foundryEnabled ? [
   }
 ] : []
 
+resource logWorkspaceExisting 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+  name: workspaceName
+}
+
+resource appInsightsExisting 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: insightsName
+}
+
+#disable-next-line no-unused-existing-resources
+resource environmentExisting 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+  name: environmentName
+}
+
+resource logs 'Microsoft.OperationalInsights/workspaces@2025-02-01' = if (deployFoundationResources) {
+  name: workspaceName
+  location: location
+  properties: {
+    retentionInDays: logRetentionDays
+    workspaceCapping: {
+      dailyQuotaGb: json(logDailyQuotaGb)
+    }
+    features: { enableLogAccessUsingOnlyResourcePermissions: true }
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+    sku: { name: 'PerGB2018' }
+  }
+}
+
+resource insights 'Microsoft.Insights/components@2020-02-02' = if (deployFoundationResources) {
+  name: insightsName
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logs.id
+    IngestionMode: 'LogAnalytics'
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+resource env 'Microsoft.App/managedEnvironments@2024-03-01' = if (deployFoundationResources) {
+  name: environmentName
+  location: location
+  properties: {
+    // No workload profiles: this is the Consumption plan.
+    zoneRedundant: false
+    peerAuthentication: {
+      mtls: {
+        enabled: false
+      }
+    }
+    peerTrafficConfiguration: {
+      encryption: {
+        enabled: false
+      }
+    }
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        customerId: logs!.properties.customerId
+        sharedKey: logs!.listKeys().primarySharedKey
+      }
+    }
+  }
+}
+
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: appName
   location: location
   identity: { type: 'SystemAssigned' }
   properties: {
-    managedEnvironmentId: env.id
+    managedEnvironmentId: selectedEnvironmentId
     configuration: {
       activeRevisionsMode: 'Single'
       secrets: insightsSecret
       ingress: {
         external: true
         targetPort: 8080
-        transport: 'httpsOnly'
+        transport: 'auto'
         allowInsecure: false
         traffic: [
           {
@@ -255,6 +280,6 @@ output minReplicas int = minReplicas
 output maxReplicas int = maxReplicas
 output foundryRuntimeMode string = foundryRuntimeMode
 output foundryConfigured bool = foundryEnabled
-output monitoringEnabled bool = monitoringEnabled
-output applicationInsightsName string = monitoringEnabled ? insights.name : ''
-output logAnalyticsWorkspace string = monitoringEnabled ? logs.name : ''
+output monitoringEnabled bool = true
+output applicationInsightsName string = deployFoundationResources ? insights!.name : appInsightsExisting.name
+output logAnalyticsWorkspace string = deployFoundationResources ? logs!.name : logWorkspaceExisting.name
