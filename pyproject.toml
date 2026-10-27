@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "Pillow>=13,<14",
   "pytest>=8.3,<9",
   "pytest-cov>=6,<7",
   "ruff>=0.8,<1",
@@ -27,6 +28,10 @@ azure = [
   "azure-identity>=1.19,<2",
 ]
 
+narration = [
+  "elevenlabs>=2.74,<3",
+  "python-dotenv>=1,<2",
+]
 [project.scripts]
 matchpulse = "matchpulse.__main__:main"
 matchpulse-synthetic = "matchpulse.synthetic:main"

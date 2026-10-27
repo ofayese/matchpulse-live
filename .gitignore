@@ -44,6 +44,29 @@ Thumbs.db
 # Logs and local evidence
 *.log
 logs/
+/audit-continuation.log
+/audit-continuation.sha256
+/MANIFEST.sha256
+
+# Generated submission media and local TTS assets
+submission/**/*.mp4
+submission/**/*.wav
+submission/**/voice-audition*/
+submission/final-support/*narration*.manifest.json
+submission/archive/manifests/*narration*.json
+/assets/kokoro-v*.onnx
+/assets/voices-v*.bin
+/assets/voices/*.pt
+/assets/voices/*.bin
+submission/local-docker-evidence/
+submission/local-tts-evidence/
+submission/FINAL_VIDEO_APPROVAL.md
+submission/FINAL_VIDEO_MANIFEST.json
+submission/MATCHPULSE_VIDEO_VERIFICATION.txt
+submission/SUBMISSION_READINESS.md
+
+# Local Azure deployment state
+.azure/deployment-plan.md
 
 # Compiled Bicep output (regenerate with: az bicep build --file infra/main.bicep)
 infra/main.json

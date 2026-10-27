@@ -1,3 +1,4 @@
+# cspell:ignore cpus pids rootfs getuid getgid accountkey pousr cognitiveservices nonsynth opencontainers Rootfs Pids Cpus
 """Hardened smoke test of a local or published MatchPulse Live container image.
 
 Usage:
@@ -425,7 +426,7 @@ def validate_oci_labels(
     return errors
 
 
-def docker(arguments: list[str], *, stdin: bytes | None = None) -> subprocess.CompletedProcess[str]:
+def docker(arguments: list[str], *, stdin: bytes | None = None) -> subprocess.CompletedProcess:
     if shutil.which("docker") is None:
         raise SmokeError("the docker command line client is not available")
     if stdin is None:

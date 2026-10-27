@@ -1,8 +1,10 @@
 # Proposed Azure OpenAI plan
 
-**Proposal only. No account or model deployment exists.** The proposed account
-name and endpoint below are placeholders for a later approved operation; check
-global name availability before use.
+**Historical proposal only; not current Azure state or authorization.** The
+publication review observed Foundry runtime off and no model deployment. It did
+not independently establish whether an unused Azure AI account exists. The
+proposed account name and endpoint below are not verified; do not execute the
+commands without fresh checks and separate explicit approval.
 
 ## Resource type
 
@@ -18,11 +20,11 @@ does not require a Foundry project.
 
 ## Account and endpoint
 
-- Proposed account name: `matchpulseitg2026` (availability unverified).
-- Subscription: `Subscription 1`, `13b00900-43c4-4cdc-aba3-4a8bb13e61cc`.
-- Resource group: `rg-matchpulse-insidethegame-dev`.
+- Proposed account name: `<AZURE_RESOURCE_NAME>` (availability unverified).
+- Subscription: `<AZURE_SUBSCRIPTION_NAME>`, `<AZURE_SUBSCRIPTION_ID>`.
+- Resource group: `<RESOURCE_GROUP>`.
 - Region: `eastus2`; fallback `eastus` only after a new quota/availability check.
-- Proposed endpoint format: `https://matchpulseitg2026.openai.azure.com/`.
+- Proposed endpoint format: `https://<AZURE_RESOURCE_NAME>.openai.azure.com/`.
 - Status: **PROPOSED - NOT DEPLOYED**. It is stored only in the what-if
   evidence parameters and not committed to application configuration.
 - Public network: enabled for the public HTTPS Container App to reach the
@@ -48,18 +50,18 @@ does not require a Foundry project.
 
 ```bash
 az cognitiveservices account create \
-  --subscription 13b00900-43c4-4cdc-aba3-4a8bb13e61cc \
-  --resource-group rg-matchpulse-insidethegame-dev \
-  --name matchpulseitg2026 \
+  --subscription <subscription-id> \
+  --resource-group <RESOURCE_GROUP> \
+  --name <AZURE_RESOURCE_NAME> \
   --location eastus2 \
   --kind OpenAI \
   --sku S0 \
-  --custom-domain matchpulseitg2026
+  --custom-domain <AZURE_RESOURCE_NAME>
 
 az cognitiveservices account deployment create \
-  --subscription 13b00900-43c4-4cdc-aba3-4a8bb13e61cc \
-  --resource-group rg-matchpulse-insidethegame-dev \
-  --name matchpulseitg2026 \
+  --subscription <subscription-id> \
+  --resource-group <RESOURCE_GROUP> \
+  --name <AZURE_RESOURCE_NAME> \
   --deployment-name matchpulse-narrative \
   --model-name gpt-4o-mini \
   --model-version 2024-07-18 \
@@ -69,7 +71,7 @@ az cognitiveservices account deployment create \
 ```
 
 Then read the actual endpoint with
-`az cognitiveservices account show --subscription 13b00900-43c4-4cdc-aba3-4a8bb13e61cc --resource-group rg-matchpulse-insidethegame-dev --name matchpulseitg2026 --query properties.endpoint -o tsv`.
+`az cognitiveservices account show --subscription <AZURE_SUBSCRIPTION_ID> --resource-group <RESOURCE_GROUP> --name <AZURE_RESOURCE_NAME> --query properties.endpoint -o tsv`.
 No command in this document has been executed.
 
 Sources: [Foundry resource types](https://learn.microsoft.com/azure/ai-foundry/concepts/architecture),

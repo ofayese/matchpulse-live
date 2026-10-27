@@ -38,11 +38,11 @@ REQUIRED_FOLDERS = (
     "MatchPulse.Live.Docs",
 )
 FORBIDDEN_PATTERNS = (
-    re.compile(r"(?i)[a-z]:[\\/]"),                       # absolute Windows path
-    re.compile(r"(?i)/home/"),                            # absolute POSIX home path
-    re.compile(r"(?i)\b[a-z0-9]+\.dev\.[a-z0-9]+\b"),     # host-shaped internal repository names
-    re.compile(r"(?i)-baseline\b"),                       # internal baseline codenames
-    re.compile(r"(?i)-full-stack\b"),                     # internal compose project names
+    re.compile(r"(?i)[a-z]:[\\/]"),  # absolute Windows path
+    re.compile(r"(?i)/home/"),  # absolute POSIX home path
+    re.compile(r"(?i)\b[a-z0-9]+\.dev\.[a-z0-9]+\b"),  # host-shaped internal repository names
+    re.compile(r"(?i)-baseline\b"),  # internal baseline codenames
+    re.compile(r"(?i)-full-stack\b"),  # internal compose project names
 )
 FORBIDDEN_SUFFIXES = (".suo", ".user", ".vs")
 
@@ -69,16 +69,27 @@ def parse() -> dict:
             match = PROJECT_LINE.match(stripped)
             if match:
                 folders[match.group(2)] = match.group(1)
-    configurations = sorted({
-        line.strip().split("|", 1)[0]
-        for line in text.splitlines()
-        if re.match(r"^\s*(Debug|Release|ChallengeDemo)\|", line)
-    })
-    return {"text": text, "folders": folders, "items": items, "configurations": configurations}
+    configurations = sorted(
+        {
+            line.strip().split("|", 1)[0]
+            for line in text.splitlines()
+            if re.match(r"^\s*(Debug|Release|ChallengeDemo)\|", line)
+        }
+    )
+    return {
+        "text": text,
+        "folders": folders,
+        "items": items,
+        "configurations": configurations,
+    }
 
 
 def validate() -> dict:
-    report: dict = {"solution": str(SOLUTION.relative_to(ROOT)), "errors": [], "warnings": []}
+    report: dict = {
+        "solution": str(SOLUTION.relative_to(ROOT)),
+        "errors": [],
+        "warnings": [],
+    }
     if not SOLUTION.is_file():
         report["errors"].append("MatchPulse.Live.sln is missing")
         return report

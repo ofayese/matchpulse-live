@@ -9,7 +9,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SOLUTION = ROOT / "MatchPulse.Live.sln"
 
 SOLUTION_FOLDER_TYPE = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}"
-PROJECT_LINE = re.compile(r'^Project\("([^"]+)"\)\s*=\s*"([^"]*)",\s*"([^"]*)",\s*"(\{[0-9A-Fa-f-]+\})"')
+PROJECT_LINE = re.compile(
+    r'^Project\("([^"]+)"\)\s*=\s*"([^"]*)",\s*"([^"]*)",\s*"(\{[0-9A-Fa-f-]+\})"'
+)
 ITEM_LINE = re.compile(r"^\s*([^\s=]+)\s*=\s*([^\s=]+)\s*$")
 
 REQUIRED_FOLDERS = {
@@ -83,7 +85,9 @@ def declared_names() -> dict[str, str]:
 
 def test_solution_file_exists():
     assert SOLUTION.is_file()
-    assert solution_text().startswith("Microsoft Visual Studio Solution File, Format Version 12.00")
+    assert solution_text().startswith(
+        "Microsoft Visual Studio Solution File, Format Version 12.00"
+    )
 
 
 def test_solution_declares_the_required_folders():
@@ -91,13 +95,17 @@ def test_solution_declares_the_required_folders():
     missing = sorted(REQUIRED_FOLDERS - set(names))
     assert not missing, f"missing solution folders: {missing}"
     for name, project_type in names.items():
-        assert project_type == SOLUTION_FOLDER_TYPE, f"{name} is not a supported solution folder"
+        assert (
+            project_type == SOLUTION_FOLDER_TYPE
+        ), f"{name} is not a supported solution folder"
 
 
 def test_solution_configurations_are_present():
     text = solution_text()
     for configuration in REQUIRED_CONFIGURATIONS:
-        assert f"{configuration}|Any CPU" in text, f"missing configuration {configuration}"
+        assert (
+            f"{configuration}|Any CPU" in text
+        ), f"missing configuration {configuration}"
 
 
 def test_every_solution_item_resolves_to_a_real_file():
@@ -112,7 +120,8 @@ def test_solution_items_use_repository_relative_paths_only():
     for item in solution_items():
         assert not item.startswith("/"), item
         assert not re.match(r"^[A-Za-z]:", item), item
-        assert ".." not in item.split("\\") and ".." not in item.split("/"), item
+        assert ".." not in item.split("\\")
+        assert ".." not in item.split("/")
         for pattern in FORBIDDEN_ITEM_PATTERNS:
             assert not pattern.search(item), item
 
@@ -126,12 +135,23 @@ def test_solution_does_not_reference_per_user_artifacts():
 
 
 def test_required_root_files_are_present():
-    missing = [name for name in REQUIRED_ROOT_FILES if not (ROOT / name).is_file()]
+    missing = [
+        name for name in REQUIRED_ROOT_FILES if not (ROOT / name).is_file()
+    ]
     assert not missing, f"missing root files: {missing}"
 
 
 def test_required_directories_are_present():
-    for name in ("src", "tests", "scripts", "data", "docs", "submission", "infra", ".github/workflows"):
+    for name in (
+        "src",
+        "tests",
+        "scripts",
+        "data",
+        "docs",
+        "submission",
+        "infra",
+        ".github/workflows",
+    ):
         assert (ROOT / name).is_dir(), name
 
 

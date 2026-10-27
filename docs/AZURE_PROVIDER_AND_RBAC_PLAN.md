@@ -1,6 +1,10 @@
 # Azure provider registration and managed-identity RBAC plan
 
-No provider registration or role assignment was performed.
+Historical planning record. The provider states below are a prior readback, not
+current verification. A fresh read-only check on 2026-10-26 confirmed that the
+deployed Container App has no ingress configuration. No provider registration
+or role assignment was performed as part of this publication review. No Azure
+mutation is authorized by this document.
 
 ## Providers
 
@@ -22,10 +26,10 @@ registration itself does not deploy a metered service. Registration can take a
 few minutes or longer; verify state before provisioning.
 
 ```bash
-az provider register --subscription 13b00900-43c4-4cdc-aba3-4a8bb13e61cc --namespace Microsoft.OperationalInsights
-az provider register --subscription 13b00900-43c4-4cdc-aba3-4a8bb13e61cc --namespace Microsoft.Insights
-az provider show --subscription 13b00900-43c4-4cdc-aba3-4a8bb13e61cc --namespace Microsoft.OperationalInsights --query registrationState -o tsv
-az provider show --subscription 13b00900-43c4-4cdc-aba3-4a8bb13e61cc --namespace Microsoft.Insights --query registrationState -o tsv
+az provider register --subscription <subscription-id> --namespace Microsoft.OperationalInsights
+az provider register --subscription <subscription-id> --namespace Microsoft.Insights
+az provider show --subscription <subscription-id> --namespace Microsoft.OperationalInsights --query registrationState -o tsv
+az provider show --subscription <subscription-id> --namespace Microsoft.Insights --query registrationState -o tsv
 ```
 
 There is no practical rollback for provider registration; it can be
@@ -39,11 +43,11 @@ After the Container App identity and Azure OpenAI account exist, assign
 
 ```bash
 az role assignment create \
-  --subscription 13b00900-43c4-4cdc-aba3-4a8bb13e61cc \
+  --subscription <subscription-id> \
   --assignee-object-id <container-app-principal-id> \
   --assignee-principal-type ServicePrincipal \
   --role "Cognitive Services OpenAI User" \
-  --scope /subscriptions/13b00900-43c4-4cdc-aba3-4a8bb13e61cc/resourceGroups/rg-matchpulse-insidethegame-dev/providers/Microsoft.CognitiveServices/accounts/matchpulseitg2026
+  --scope /subscriptions/<AZURE_SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.CognitiveServices/accounts/<AZURE_RESOURCE_NAME>
 ```
 
 Verify the exact role and scope, wait for propagation, then test from the app.

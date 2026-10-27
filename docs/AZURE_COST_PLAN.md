@@ -47,17 +47,64 @@ ceiling is a conservative input-token proxy, not model-tokenizer accounting.
 The counter resets on process restart. The 80-call Scenario C limit therefore
 requires operator tracking across restarts; it is not a technical hard limit.
 
-**Artifact limitation:** those new 4 KiB and 128-token source controls are not
-present in the supplied immutable GHCR digest
-`1bb9df336d95a5549f7384e023c5954710c662f59d6fb9b9ac2d72ed3ee0c96c`. The
-planning repo changes do not rebuild or republish that accepted image. The
-deployed image must be replaced by a separately reviewed, newly built immutable
-digest before those two controls can be claimed for Azure. The Bicep call
-budget, concurrency and timeout environment values are separate configuration.
+**Artifact identity:** the currently deployed image is
+`ghcr.io/ofayese/matchpulse-live@sha256:f413c32f671b191a4b3c63c8bed9c7b318ccdc60633bf222d5cba0049feaa226`,
+associated with source
+`335781f928011f99a644083d80bfe4dfc480b1a6` and attestation `59336499`.
+The fresh read-only Azure check on 2026-10-26 confirmed that the deployed app
+still uses this digest and has no ingress configuration. The fresh, paginated resource-group inventory returned seven resources: the
+five previously observed app/monitoring resources plus an unexpected
+Cognitive Services account and child Foundry project. They were explicitly
+created after the Container App deployment and are not in Bicep or required
+by the app. This is `AZURE_COUNT_RECONCILED_UNEXPECTED_RESOURCES`; owner/
+security review and a separate disposition remain outstanding. No model
+deployments were found, and the app's environment-variable names contain no
+Foundry setting. A recorded run had zero model calls. Hosted-agent inventory
+was not available because the optional Hosted Agents Preview returned 403.
+The direct resource-group RBAC query returned no assignments. Current
+month-to-date spend is $0 USD; the $25 monthly resource-group budget has $0
+actual and forecast, while the separate $50 annual subscription budget has
+$0 actual and no returned forecast. These are alerts, not spending limits;
+the $15 operational stop threshold is not enforced by Azure. The resource
+group cost query returned only the workspace at $0 and did not itemize
+account/project usage; resource-ID-filtered month-to-date queries for the
+additional account and project returned no rows. This does not establish zero
+future or usage-based cost. The artifact attestation was not independently
+revalidated during this check.
+
+The Log Analytics workspace has a 30-day default retention and 0.023 GB/day
+quota. The linked Application Insights component reports 90 days, and a
+direct table-list read confirms 90-day retention for its core telemetry
+tables. Workspace-based Application Insights is stored/billed through Log
+Analytics, with retention set at workspace/table scope; see
+[Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-monitor/app/create-workspace-resource)
+and [Log Analytics retention](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/data-retention-configure).
+Source inspection confirms the 4 KiB and 128-token controls are present at the
+recorded source revision. The Bicep call budget, concurrency and timeout
+environment values are separate configuration.
 
 For planning confidence, use a 0.5x–2x sensitivity range on each seven-day point estimate: A $0.084–$0.338, B $0.215–$0.860, and C $0.631–$2.523 before free allowances. This is a sensitivity range, not a statistical confidence interval, and excludes daily-cap overshoot, extended runtime, and untracked calls. Confidence is medium for arithmetic at observed rates and low for actual spend because real traffic, ingestion, pricing changes, and free-credit eligibility are unknown. The constrained estimate and sensitivity range are below $25 for the planned seven-day challenge window only if operating assumptions are followed. No Azure budget or telemetry cap is a guaranteed cutoff. Daily cost review and scale-to-zero are required;
 shut down if the forecast reaches $25 or an unexplained ingestion/call increase
 appears.
+
+## Monthly usage estimates
+
+These estimates use a 30-day month, the rates above, and no free grants. They
+exclude taxes and cap overshoot. The zero-usage row assumes no active replica,
+model calls, requests, or ingested logs; Azure platform logs may make actual
+telemetry spend nonzero.
+
+| Scenario | Monthly assumptions | Estimated total |
+| --- | --- | ---: |
+| Zero use | 0 active hours, no requests/inference/log ingestion | $0.00 workload cost; up to $1.90 if the workspace ingests at its daily cap |
+| Low use | 1 active hour/day, 100 requests/day, 10 model calls/day at 500 input/300 output tokens, 0.10 GB logs/month | $1.98 |
+| Demo use | 2 active hours/day, 500 requests/day, 20 model calls/day at 500 input/300 output tokens, 0.023 GB logs/day | $5.32 |
+
+The low-use calculation is $1.62 compute + $0.0012 requests + $0.08415
+inference + $0.276 logs. Demo use is $3.24 compute + $0.006 requests +
+$0.1683 inference + $1.9044 logs. Estimates exclude cap overshoot and use
+pre-free-allowance rates. A live deployment still needs daily cost review and
+an explicit operator stop procedure.
 
 ## Monthly accidental-running projection
 
