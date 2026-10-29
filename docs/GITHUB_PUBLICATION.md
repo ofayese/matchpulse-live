@@ -120,6 +120,13 @@ before any deployment reference is approved.
 
 ### Published image
 
+> **SUPERSEDED RELEASE DIGEST - retained for historical provenance only.**
+> The image below was the earlier publication. The current approved submitted
+> release is
+> `ghcr.io/ofayese/matchpulse-live@sha256:f413c32f671b191a4b3c63c8bed9c7b318ccdc60633bf222d5cba0049feaa226`
+> (source revision `335781f928011f99a644083d80bfe4dfc480b1a6`). Do not use the
+> digest below for judging or deployment.
+
 | Property | Value |
 | -------- | ----- |
 | Tag | `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071` |
