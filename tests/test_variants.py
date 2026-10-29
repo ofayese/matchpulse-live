@@ -17,14 +17,43 @@ PROFILES = ("fan-en", "analyst-en", "broadcaster-es", "fan-fr")
 def _seed(client: TestClient) -> str:
     match_id = "compare-demo"
     events = [
-        {"match_id": match_id, "sequence": 0, "clock_ms": 0, "event_type": "match_start", "source": "synthetic"},
-        {"match_id": match_id, "sequence": 1, "clock_ms": 45000, "event_type": "shot",
-         "team_id": "Northbridge-FC", "player_id": "NB-7", "outcome": "on_target",
-         "speed_kmh": 118, "source": "synthetic"},
-        {"match_id": match_id, "sequence": 2, "clock_ms": 90000, "event_type": "tackle",
-         "team_id": "Northbridge-FC", "player_id": "NB-7", "outcome": "success",
-         "x": 78, "y": 40, "source": "synthetic"},
-        {"match_id": match_id, "sequence": 3, "clock_ms": 5400000, "event_type": "match_end", "source": "synthetic"},
+        {
+            "match_id": match_id,
+            "sequence": 0,
+            "clock_ms": 0,
+            "event_type": "match_start",
+            "source": "synthetic",
+        },
+        {
+            "match_id": match_id,
+            "sequence": 1,
+            "clock_ms": 45000,
+            "event_type": "shot",
+            "team_id": "Northbridge-FC",
+            "player_id": "NB-7",
+            "outcome": "on_target",
+            "speed_kmh": 118,
+            "source": "synthetic",
+        },
+        {
+            "match_id": match_id,
+            "sequence": 2,
+            "clock_ms": 90000,
+            "event_type": "tackle",
+            "team_id": "Northbridge-FC",
+            "player_id": "NB-7",
+            "outcome": "success",
+            "x": 78,
+            "y": 40,
+            "source": "synthetic",
+        },
+        {
+            "match_id": match_id,
+            "sequence": 3,
+            "clock_ms": 5400000,
+            "event_type": "match_end",
+            "source": "synthetic",
+        },
     ]
     for event in events:
         assert client.post("/v1/events", json=event).status_code == 202
@@ -39,14 +68,31 @@ def test_variants_share_one_authoritative_basis():
         moments = response.json()["moments"]
         assert moments
         for moment in moments:
-            variants = {variant["profile_id"]: variant for variant in moment["variants"]}
+            variants = {
+                variant["profile_id"]: variant
+                for variant in moment["variants"]
+            }
             assert set(variants) == set(PROFILES)
             for variant in variants.values():
-                assert variant["evidence_event_ids"] == moment["evidence_event_ids"]
+                assert (
+                    variant["evidence_event_ids"]
+                    == moment["evidence_event_ids"]
+                )
             # The authoritative statistics are identical for every audience.
-            assert len({tuple(sorted(variant["stats"].items())) for variant in moment["variants"]}) == 1
+            assert (
+                len(
+                    {
+                        tuple(sorted(variant["stats"].items()))
+                        for variant in moment["variants"]
+                    }
+                )
+                == 1
+            )
             # The insight id is shared, so the presentation is the only difference.
-            assert all(variant["profile_id"] in PROFILES for variant in moment["variants"])
+            assert all(
+                variant["profile_id"] in PROFILES
+                for variant in moment["variants"]
+            )
 
 
 def test_variants_preserve_evidence_and_identifiers():
@@ -63,8 +109,11 @@ def test_variants_use_the_default_locale_of_each_audience():
     with TestClient(create_app()) as client:
         match_id = _seed(client)
         moments = client.get(f"/v1/matches/{match_id}/variants").json()["moments"]
-        locales = {variant["profile_id"]: variant["locale"]
-                   for moment in moments for variant in moment["variants"]}
+        locales = {
+            variant["profile_id"]: variant["locale"]
+            for moment in moments
+            for variant in moment["variants"]
+        }
         assert locales["fan-en"] == "en"
         assert locales["analyst-en"] == "en"
         assert locales["broadcaster-es"] == "es"
@@ -75,7 +124,10 @@ def test_a_language_override_changes_only_the_presentation():
     with TestClient(create_app()) as client:
         match_id = _seed(client)
         default = client.get(f"/v1/matches/{match_id}/variants").json()["moments"]
-        overridden = client.get(f"/v1/matches/{match_id}/variants", params={"locale": "fr"}).json()["moments"]
+        overridden = client.get(
+            f"/v1/matches/{match_id}/variants",
+            params={"locale": "fr"},
+        ).json()["moments"]
         assert len(default) == len(overridden)
         for before, after in zip(default, overridden, strict=True):
             assert before["insight_id"] == after["insight_id"]
@@ -88,8 +140,13 @@ def test_presentation_differs_between_audiences():
     with TestClient(create_app()) as client:
         match_id = _seed(client)
         moments = client.get(f"/v1/matches/{match_id}/variants").json()["moments"]
-        titles = {moment["insight_id"]: {variant["profile_id"]: variant["title"] for variant in moment["variants"]}
-                  for moment in moments}
+        titles = {
+            moment["insight_id"]: {
+                variant["profile_id"]: variant["title"]
+                for variant in moment["variants"]
+            }
+            for moment in moments
+        }
         assert titles
     assert any(len(set(values.values())) > 1 for values in titles.values())
 

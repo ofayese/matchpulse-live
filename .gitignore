@@ -78,3 +78,5 @@ docker-compose.local.yml
 
 # Locally downloaded release tooling (Trivy, crane, jq) - never committed
 release-tools/
+
+.fake

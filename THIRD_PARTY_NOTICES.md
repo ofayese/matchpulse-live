@@ -1,5 +1,11 @@
 # Third-Party Notices — Local TTS and Final-Video Narration
 
+**Current active narration:** the human-approved final video uses ElevenLabs
+stock voice Lily, generated during an active paid Starter subscription.
+The rights basis is ElevenLabs' paid commercial license for that output.
+The Kokoro findings below are retained as historical provenance only and do
+not describe the active video.
+
 ## Active final-video narration — ElevenLabs
 
 | Component | Status |
@@ -25,8 +31,9 @@ For redistribution of Apache-2.0 or MIT **code/model materials where those licen
 
 An independent re-verification against primary sources (Hugging Face model API/card, `VOICES.md`, the GitHub Releases API for `model-files-v1.0`, and upstream repository licenses) was performed on 2026-10-26. The Hugging Face model repository's `/LICENSE` path returns 404; the separate official Kokoro GitHub source repository has an Apache-2.0 LICENSE. The v1.0 release asset API reports `"digest": null` for assets. See the "Independent re-verification (2026-10-26)" section of `docs/LOCAL_TTS_PROVENANCE.md` for the queried endpoints and details.
 
-## Final generated-audio determination (2026-10-26)
+## Historical Kokoro generated-audio determination (2026-10-26; superseded)
 
+At the time of the earlier review, the Kokoro candidate had
 `VOICE_RIGHTS_CONCLUSION=RIGHTS_UNRESOLVED` and
 `THIRD_PARTY_RIGHTS_DECLARATION=PENDING_RIGHTS_REMEDIATION`. The official
 Kokoro model card says training used permissive/non-copyrighted data and
@@ -37,12 +44,11 @@ output-attribution terms. Apache-2.0 applies to the upstream model material
 as declared; it is not itself proof of the separate voice archive's terms,
 speaker/likeness permission, or generated-output rights.
 
-The approved MatchPulse MP4 carries generated audio only and no model or
-voice weights are part of the MatchPulse package. The package does not
-include `.onnx`, `.bin`, `.pt`, or `.pth` assets. Do not redistribute
-weights from the local setup. See
+That historical determination applied only to the superseded Kokoro
+candidate. The active approved MatchPulse MP4 uses the ElevenLabs Lily
+narration described above. No model or voice weights are part of the
+MatchPulse package. The package does not include `.onnx`, `.bin`, `.pt`, or
+`.pth` assets. Do not redistribute weights from the local setup. See
 [`submission/VOICE_RIGHTS_DECISION.md`](submission/VOICE_RIGHTS_DECISION.md)
-for the question-by-question determination and the authorization-gated
-ElevenLabs Starter alternative. CLI onboarding and bounded short auditions
-are complete, but production voice selection, full narration, and
-publication remain pending.
+for the question-by-question historical determination and active rights
+record.

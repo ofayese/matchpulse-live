@@ -7,12 +7,13 @@ checkout changes made after deployment are not in that image.
 
 ## Approved demonstration and deployment boundary
 
-- **Approved local video (not committed or uploaded):**
+- **Approved local master (not committed; the YouTube demo is already uploaded):**
   `matchpulse-submission-hosted-elevenlabs-lily-v1-candidate.mp4`
 - **SHA-256:** `f06bb7dfe48b48c642044a6b09cd29cf857edb6f1bed6a95be90a1718ec2b786`
-- **Duration:** 115 seconds. Human decision: APPROVED; upload and challenge
-  submission remain separate, pending actions.
-- **Public video URL:** `<VIDEO_URL>`; not available before separate upload authorization.
+- **Duration:** 115 seconds. Human decision: APPROVED. The video is available on YouTube; portal processing and challenge-state confirmation remain unresolved.
+- **Public video URL:** [Verified Unlisted YouTube demo](https://www.youtube.com/watch?v=O5gHkl_UFHc), available by URL.
+- **Portal media:** the Innovation Studio player remains unavailable; organizer support is pending. The public YouTube URL is the verified playable version.
+- **Challenge entry:** the project is saved and listed, but organizer confirmation is pending; this document does not claim confirmed submission.
 - **Local-only approval evidence:** `FINAL_VIDEO_APPROVAL.md`,
   `FINAL_VIDEO_MANIFEST.json`, and the hosted English captions are excluded
   from the proposed public repository allowlist.
@@ -69,7 +70,7 @@ checkout changes made after deployment are not in that image.
      change the score, and out-of-order event rejection.
    - `01:27–01:39`: recap cites accepted event evidence.
    - `01:39–01:48`: Foundry/model calls disabled and deterministic fallback.
-   - The SRT and approval record remain local-only and are not commit inputs.
+   - The English SRT is a local timing draft and requires human playback review before any caption upload. Local approval evidence remains excluded from the public repository.
 4. **Current strengths**
    - Concrete, testable event contract and deterministic rule-based state
      transitions; duplicate retry and ordering behavior are visible in the

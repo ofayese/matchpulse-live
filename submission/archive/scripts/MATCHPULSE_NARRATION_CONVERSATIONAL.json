@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "style_label": "PROVISIONAL_CONVERSATIONAL_STYLE",
+  "model": "kokoro-v1.0",
+  "voice": "bf_emma",
+  "baseline_speed": 0.95,
+  "generation_attempt": 11,
+  "pronunciation_substitutions": [],
+  "units": [
+    {
+      "unit": 1,
+      "visual_start_seconds": 0,
+      "visual_end_seconds": 18,
+      "available_duration_seconds": 18,
+      "cue_ids": [
+        1,
+        2
+      ],
+      "original_captions": [
+        {
+          "cue_id": 1,
+          "text": "MatchPulse Live runs on Azure Container Apps. This uses synthetic match events only."
+        },
+        {
+          "cue_id": 2,
+          "text": "The scenario follows Northbridge City and Harbor United, seeded and fictional."
+        }
+      ],
+      "revised_spoken_text": "Welcome in. This demo runs on Azure Container Apps, and each match event is synthetic. We’re following Northbridge City against Harbor United, a seeded and fictional matchup. Watch how accepted events become evidence-linked match insights. Nothing here comes from live external data.",
+      "delivery_label": "welcoming",
+      "preferred_speed": 0.94,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 2,
+      "visual_start_seconds": 18,
+      "visual_end_seconds": 28,
+      "available_duration_seconds": 10,
+      "cue_ids": [
+        3
+      ],
+      "original_captions": [
+        {
+          "cue_id": 3,
+          "text": "Events create evidence-linked insights for each moment in the match."
+        }
+      ],
+      "revised_spoken_text": "Every match moment links to accepted event evidence. That clear source supports the insight you see, and keeps the story grounded in what the system accepted.",
+      "delivery_label": "explanatory",
+      "preferred_speed": 0.95,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 3,
+      "visual_start_seconds": 28,
+      "visual_end_seconds": 38,
+      "available_duration_seconds": 10,
+      "cue_ids": [
+        4
+      ],
+      "original_captions": [
+        {
+          "cue_id": 4,
+          "text": "Northbridge City opens the scoring from an accepted synthetic event."
+        }
+      ],
+      "revised_spoken_text": "Northbridge City gets on the board from a synthetic event the system accepts. That accepted moment supports the insight, and its evidence stays clearly attached.",
+      "delivery_label": "explanatory",
+      "preferred_speed": 0.95,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 4,
+      "visual_start_seconds": 38,
+      "visual_end_seconds": 54,
+      "available_duration_seconds": 16,
+      "cue_ids": [
+        5,
+        6
+      ],
+      "original_captions": [
+        {
+          "cue_id": 5,
+          "text": "Replaying the same event does not change the score or duplicate goals."
+        },
+        {
+          "cue_id": 6,
+          "text": "Out-of-order events are rejected without corrupting match state."
+        }
+      ],
+      "revised_spoken_text": "Same event twice? The score stays put, and the duplicate is handled idempotently. The replay doesn’t add another goal or change the accepted result. An out-of-order event is rejected cleanly, without corrupting match state. Match state stays consistent too.",
+      "delivery_label": "reassuring",
+      "preferred_speed": 0.97,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 5,
+      "visual_start_seconds": 54,
+      "visual_end_seconds": 63,
+      "available_duration_seconds": 9,
+      "cue_ids": [
+        7
+      ],
+      "original_captions": [
+        {
+          "cue_id": 7,
+          "text": "Fan mode makes the same verified moment immediate and clear."
+        }
+      ],
+      "revised_spoken_text": "Fan view makes the verified moment immediate and easy to follow. It stays clear at a glance, still grounded in the accepted match evidence.",
+      "delivery_label": "transition",
+      "preferred_speed": 0.95,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 6,
+      "visual_start_seconds": 63,
+      "visual_end_seconds": 80,
+      "available_duration_seconds": 17,
+      "cue_ids": [
+        8,
+        9
+      ],
+      "original_captions": [
+        {
+          "cue_id": 8,
+          "text": "Analyst mode adds the calculation, inputs, and evidence identifiers."
+        },
+        {
+          "cue_id": 9,
+          "text": "Broadcaster mode condenses the insight for a live overlay."
+        }
+      ],
+      "revised_spoken_text": "Analyst view lays out the calculation, inputs, and evidence identifiers, so you can trace how the insight was formed back to the original accepted event evidence. Broadcaster view condenses that same insight for a live overlay, presenting the same match facts in less space.",
+      "delivery_label": "analytical",
+      "preferred_speed": 0.96,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 7,
+      "visual_start_seconds": 80,
+      "visual_end_seconds": 87,
+      "available_duration_seconds": 7,
+      "cue_ids": [
+        10
+      ],
+      "original_captions": [
+        {
+          "cue_id": 10,
+          "text": "Spanish and French localize the copy while preserving the same match facts."
+        }
+      ],
+      "revised_spoken_text": "In English, Spanish, or French, the wording changes, but the same match evidence stays in every version.",
+      "delivery_label": "explanatory",
+      "preferred_speed": 0.95,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 8,
+      "visual_start_seconds": 87,
+      "visual_end_seconds": 99,
+      "available_duration_seconds": 12,
+      "cue_ids": [
+        11
+      ],
+      "original_captions": [
+        {
+          "cue_id": 11,
+          "text": "Northbridge City wins two-one. The recap cites accepted event evidence."
+        }
+      ],
+      "revised_spoken_text": "Northbridge City beats Harbor United, two goals to one. The recap is grounded in accepted event evidence, reflecting the score and accepted events, not outside data or assumptions.",
+      "delivery_label": "emphasis",
+      "preferred_speed": 0.94,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 9,
+      "visual_start_seconds": 99,
+      "visual_end_seconds": 108,
+      "available_duration_seconds": 9,
+      "cue_ids": [
+        12
+      ],
+      "original_captions": [
+        {
+          "cue_id": 12,
+          "text": "Foundry and model calls are disabled. Fallback remains deterministic."
+        }
+      ],
+      "revised_spoken_text": "For this deployment, every result comes from deterministic fallback. Foundry is switched off entirely, so the model-call count is zero.",
+      "delivery_label": "reassuring",
+      "preferred_speed": 0.95,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": true,
+      "factual_changes": []
+    },
+    {
+      "unit": 10,
+      "visual_start_seconds": 108,
+      "visual_end_seconds": 115,
+      "available_duration_seconds": 7,
+      "cue_ids": [
+        13
+      ],
+      "original_captions": [
+        {
+          "cue_id": 13,
+          "text": "MatchPulse Live: hosted and synthetic. No live external data is used."
+        }
+      ],
+      "revised_spoken_text": "Hosted on Azure, this demo uses synthetic data, not a live feed. This is a fictional match.",
+      "delivery_label": "closing",
+      "preferred_speed": 0.94,
+      "opening_pause_seconds": 0.22,
+      "closing_pause_seconds": 0.28,
+      "connected_to_next": false,
+      "factual_changes": []
+    }
+  ]
+}

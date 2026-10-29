@@ -1,0 +1,420 @@
+{
+  "version": "LILY_V2",
+  "status": "PENDING_EXACT_SCRIPT_APPROVAL",
+  "voice": {
+    "provider": "ElevenLabs",
+    "name": "Lily",
+    "voice_id": "pFZP5JQG7iQjIQuC4Bku",
+    "model": "eleven_multilingual_v2",
+    "stock_voice": "YES",
+    "voice_cloning": "NO",
+    "beta_service": "NO"
+  },
+  "units": [
+    {
+      "unit": 1,
+      "visual_start_seconds": 0.0,
+      "visual_end_seconds": 18.0,
+      "exact_spoken_text": "Welcome to MatchPulse Live, hosted on Azure Container Apps. This fictional match follows Northbridge City and Harbor United through synthetic football events. The analysis uses accepted events, not a live feed.",
+      "spoken_segments": [
+        {
+          "text": "Welcome to MatchPulse Live, hosted on Azure Container Apps.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "This fictional match follows Northbridge City and Harbor United through synthetic football events.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "The analysis uses accepted events, not a live feed.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 13.05,
+      "available_visual_duration_seconds": 18.0,
+      "v1_reference": {
+        "script_word_count": 41,
+        "manifest_speech_start_seconds": 0.22,
+        "manifest_speech_end_seconds": 17.336,
+        "estimated_v1_syllables_per_second": 4.44
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 2,
+      "visual_start_seconds": 18.0,
+      "visual_end_seconds": 28.0,
+      "exact_spoken_text": "Each match moment links to the event the system accepted. You can trace the source behind an insight and inspect its supporting evidence.",
+      "spoken_segments": [
+        {
+          "text": "Each match moment links to the event the system accepted.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "You can trace the source behind an insight and inspect its supporting evidence.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 8.05,
+      "available_visual_duration_seconds": 10.0,
+      "v1_reference": {
+        "script_word_count": 27,
+        "manifest_speech_start_seconds": 18.22,
+        "manifest_speech_end_seconds": 27.61,
+        "estimated_v1_syllables_per_second": 4.47
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 3,
+      "visual_start_seconds": 28.0,
+      "visual_end_seconds": 38.0,
+      "exact_spoken_text": "After a synthetic goal event is accepted, Northbridge City’s score increases. The event stays linked to its resulting insight.",
+      "spoken_segments": [
+        {
+          "text": "After a synthetic goal event is accepted, Northbridge City’s score increases.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "The event stays linked to its resulting insight.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 8.49,
+      "available_visual_duration_seconds": 10.0,
+      "v1_reference": {
+        "script_word_count": 24,
+        "manifest_speech_start_seconds": 28.22,
+        "manifest_speech_end_seconds": 37.684,
+        "estimated_v1_syllables_per_second": 4.23
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 4,
+      "visual_start_seconds": 38.0,
+      "visual_end_seconds": 54.0,
+      "exact_spoken_text": "Replaying the same event does not add another goal or change the score. Out-of-order events are rejected, so accepted match state stays consistent.",
+      "spoken_segments": [
+        {
+          "text": "Replaying the same event does not add another goal or change the score.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "Out-of-order events are rejected, so accepted match state stays consistent.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 9.03,
+      "available_visual_duration_seconds": 16.0,
+      "v1_reference": {
+        "script_word_count": 38,
+        "manifest_speech_start_seconds": 38.22,
+        "manifest_speech_end_seconds": 52.742,
+        "estimated_v1_syllables_per_second": 4.2
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 5,
+      "visual_start_seconds": 54.0,
+      "visual_end_seconds": 63.0,
+      "exact_spoken_text": "Fan view puts the verified moment first in a clear summary. Accepted event evidence keeps it in context.",
+      "spoken_segments": [
+        {
+          "text": "Fan view puts the verified moment first in a clear summary.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "Accepted event evidence keeps it in context.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 6.74,
+      "available_visual_duration_seconds": 9.0,
+      "v1_reference": {
+        "script_word_count": 24,
+        "manifest_speech_start_seconds": 54.22,
+        "manifest_speech_end_seconds": 62.313,
+        "estimated_v1_syllables_per_second": 4.45
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 6,
+      "visual_start_seconds": 63.0,
+      "visual_end_seconds": 80.0,
+      "exact_spoken_text": "Analyst view shows the calculation, inputs, and evidence identifiers, so you can trace how an insight was formed. Broadcaster view condenses that same insight and match facts for a live overlay.",
+      "spoken_segments": [
+        {
+          "text": "Analyst view shows the calculation, inputs, and evidence identifiers, so you can trace how an insight was formed.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "Broadcaster view condenses that same insight and match facts for a live overlay.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 11.63,
+      "available_visual_duration_seconds": 17.0,
+      "v1_reference": {
+        "script_word_count": 46,
+        "manifest_speech_start_seconds": 63.22,
+        "manifest_speech_end_seconds": 79.785,
+        "estimated_v1_syllables_per_second": 4.47
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 7,
+      "visual_start_seconds": 80.0,
+      "visual_end_seconds": 87.0,
+      "exact_spoken_text": "English, Spanish, and French versions change the wording but preserve the same match evidence.",
+      "spoken_segments": [
+        {
+          "text": "English, Spanish, and French versions change the wording but preserve the same match evidence.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 4.91,
+      "available_visual_duration_seconds": 7.0,
+      "v1_reference": {
+        "script_word_count": 18,
+        "manifest_speech_start_seconds": 80.22,
+        "manifest_speech_end_seconds": 86.289,
+        "estimated_v1_syllables_per_second": 4.28
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 8,
+      "visual_start_seconds": 87.0,
+      "visual_end_seconds": 99.0,
+      "exact_spoken_text": "Northbridge City beats Harbor United two goals to one. The recap connects the score to accepted match events, not outside data.",
+      "spoken_segments": [
+        {
+          "text": "Northbridge City beats Harbor United two goals to one.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "The recap connects the score to accepted match events, not outside data.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 7.44,
+      "available_visual_duration_seconds": 12.0,
+      "v1_reference": {
+        "script_word_count": 30,
+        "manifest_speech_start_seconds": 87.22,
+        "manifest_speech_end_seconds": 97.933,
+        "estimated_v1_syllables_per_second": 4.57
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 9,
+      "visual_start_seconds": 99.0,
+      "visual_end_seconds": 108.0,
+      "exact_spoken_text": "This deployment uses deterministic fallback. Foundry is disabled, with zero model calls in the demo.",
+      "spoken_segments": [
+        {
+          "text": "This deployment uses deterministic fallback.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "Foundry is disabled, with zero model calls in the demo.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 6.58,
+      "available_visual_duration_seconds": 9.0,
+      "v1_reference": {
+        "script_word_count": 21,
+        "manifest_speech_start_seconds": 99.22,
+        "manifest_speech_end_seconds": 107.558,
+        "estimated_v1_syllables_per_second": 4.56
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    },
+    {
+      "unit": 10,
+      "visual_start_seconds": 108.0,
+      "visual_end_seconds": 115.0,
+      "exact_spoken_text": "This demo uses synthetic data, not a live feed. Both teams and the match are fictional.",
+      "spoken_segments": [
+        {
+          "text": "This demo uses synthetic data, not a live feed.",
+          "pause_after_seconds": 0.22,
+          "pause_kind": "sentence"
+        },
+        {
+          "text": "Both teams and the match are fictional.",
+          "pause_after_seconds": 0.0,
+          "pause_kind": ""
+        }
+      ],
+      "intended_pauses": {
+        "between_sentences_seconds": 0.22,
+        "closing_pause_seconds": 0.0
+      },
+      "expected_duration_seconds": 5.24,
+      "available_visual_duration_seconds": 7.0,
+      "v1_reference": {
+        "script_word_count": 17,
+        "manifest_speech_start_seconds": 108.22,
+        "manifest_speech_end_seconds": 113.898,
+        "estimated_v1_syllables_per_second": 4.58
+      },
+      "change_state": "CHANGED_REQUIRES_REGENERATION",
+      "reuse_state": "REGENERATE_ALL_UNITS_FOR_CONSISTENT_LILY_DELIVERY",
+      "pronunciation_metadata": {
+        "aliases": {},
+        "public_spelling": "Harbor United"
+      },
+      "claim_review": "PASSED_FOR_CANDIDATE_WORDING",
+      "human_wording_approval": "REQUIRED"
+    }
+  ],
+  "pronunciation_metadata": {
+    "aliases": {},
+    "note": "Keep public spellings in script/captions. Do not use phonetic spellings."
+  },
+  "review": {
+    "claim_review": "PASSED",
+    "privacy_review": "PASSED",
+    "rights_wording_review": "PASSED_NO_RIGHTS_CLAIM_IN_SCRIPT",
+    "duration_review": "PASSED_ESTIMATED",
+    "human_script_approval": "NO",
+    "elevenlabs_generation_authorized": "NO"
+  },
+  "generation": {
+    "authorized": false,
+    "generated": false,
+    "must_regenerate_all_units": true,
+    "generation_utc": null
+  },
+  "reference_hashes": {
+    "v1_video_sha256": "f06bb7dfe48b48c642044a6b09cd29cf857edb6f1bed6a95be90a1718ec2b786",
+    "v1_wav_sha256": "0f5402de527d1725c5fb8ed7a4ef97f384c7af405468e8ee4e33f002fc100ded",
+    "v1_manifest_sha256": "9f037d0dbe369ce87577b48aab9b81b2e5fdc16283b9700d326e35ca26b491f8",
+    "v1_script_sha256": "9930d8b267fc881f48d43537d1b3a999e003e9024e27c04b316a9fc3c7d3c3e2",
+    "v1_srt_sha256": "2b2ee2fa53f55e144beb9b3a986c9680134a30de5e49bf71822657701bd4aa17"
+  }
+}

@@ -1,0 +1,153 @@
+1
+00:00:00,220 --> 00:00:01,500
+Here's MatchPulse Live.
+
+2
+00:00:01,740 --> 00:00:06,080
+This demo runs on Azure Container Apps
+and each match event is synthetic.
+
+3
+00:00:06,820 --> 00:00:09,400
+We're following Northbridge City
+against Harbor United,
+
+4
+00:00:09,680 --> 00:00:11,400
+a seeded and fictional matchup.
+
+5
+00:00:11,840 --> 00:00:14,520
+Accepted events become
+evidence-linked match insights.
+
+6
+00:00:15,000 --> 00:00:17,280
+Nothing here comes from live
+external data.
+
+7
+00:00:18,220 --> 00:00:20,900
+Every match moment links
+to accepted event evidence.
+
+8
+00:00:21,280 --> 00:00:24,060
+That clear source supports
+the insight you see,
+
+9
+00:00:24,060 --> 00:00:27,620
+and keeps the story grounded in what
+the system accepted too.
+
+10
+00:00:27,620 --> 00:00:32,280
+Northbridge City gets on the board
+from a synthetic event the system accepts.
+
+11
+00:00:33,060 --> 00:00:37,620
+That accepted moment supports the insight,
+and its evidence stays attached.
+
+12
+00:00:38,280 --> 00:00:39,280
+Same event twice?
+
+13
+00:00:39,660 --> 00:00:42,480
+The score stays put,
+and the duplicate changes nothing.
+
+14
+00:00:43,040 --> 00:00:46,360
+The replay doesn't add another
+goal or change the accepted result.
+
+15
+00:00:46,700 --> 00:00:50,560
+An out-of-order event is rejected
+cleanly, without corrupting match state.
+
+16
+00:00:50,980 --> 00:00:52,980
+Match state stays consistent too.
+
+17
+00:00:53,960 --> 00:00:57,780
+Fan view makes the verified moment
+immediate and easy to follow.
+
+18
+00:00:58,440 --> 00:01:02,200
+It stays clear at a glance, still
+grounded in the accepted match evidence.
+
+19
+00:01:03,220 --> 00:01:07,500
+Analyst view lays out the calculation,
+inputs and evidence identifiers,
+
+20
+00:01:07,680 --> 00:01:11,980
+so you can trace how the insight was
+formed back to accepted event evidence.
+
+21
+00:01:12,900 --> 00:01:16,260
+Broadcaster view condenses that
+same insight for a live overlay,
+
+22
+00:01:16,400 --> 00:01:19,620
+presenting the same match facts
+in less space for a live audience.
+
+23
+00:01:19,620 --> 00:01:22,960
+In English, Spanish or French,
+the wording changes,
+
+24
+00:01:23,160 --> 00:01:26,540
+but the same match evidence
+stays in every version too.
+
+25
+00:01:27,280 --> 00:01:30,380
+Northbridge City beats
+Harbor United, two goals to one.
+
+26
+00:01:30,780 --> 00:01:33,340
+The recap is grounded
+in accepted match events,
+
+27
+00:01:33,560 --> 00:01:37,880
+linking this result to the events the
+system accepted rather than outside data.
+
+28
+00:01:39,220 --> 00:01:40,240
+For this deployment,
+
+29
+00:01:40,560 --> 00:01:43,080
+every result comes
+from deterministic fallback.
+
+30
+00:01:43,660 --> 00:01:47,460
+Foundry is disabled in the hosted
+runtime, so model calls are zero.
+
+31
+00:01:47,460 --> 00:01:52,300
+Hosted on Azure, this demo uses
+synthetic data, not a live feed.
+
+32
+00:01:52,680 --> 00:01:54,090
+This is a fictional match.

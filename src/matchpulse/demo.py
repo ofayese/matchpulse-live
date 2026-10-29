@@ -129,30 +129,48 @@ class DemoRunManager:
 
     # ---------------------------------------------------------------- planning
 
-    def plan(self, seed: int | None = None, event_cap: int | None = None) -> DemoRunPlan:
+    def plan(
+        self, seed: int | None = None, event_cap: int | None = None
+    ) -> DemoRunPlan:
         """Build the deterministic event plan for one demo run."""
         cap = self.event_cap if event_cap is None else max(1, int(event_cap))
         effective_seed = DEFAULT_SEED if seed is None else int(seed)
         run_id = uuid.uuid4().hex
         match_id = f"demo-{run_id[:12]}"
         events = self._bounded_events(match_id, effective_seed, cap)
-        return DemoRunPlan(run_id=run_id, match_id=match_id, seed=effective_seed, events=events)
+        return DemoRunPlan(
+            run_id=run_id,
+            match_id=match_id,
+            seed=effective_seed,
+            events=events,
+        )
 
     @staticmethod
-    def _bounded_events(match_id: str, seed: int, cap: int) -> tuple[MatchEvent, ...]:
-        generated = list(generate_match(match_id=match_id, seed=seed, events=DEFAULT_BODY_EVENTS))
+    def _bounded_events(
+        match_id: str, seed: int, cap: int
+    ) -> tuple[MatchEvent, ...]:
+        generated = list(
+            generate_match(
+                match_id=match_id, seed=seed, events=DEFAULT_BODY_EVENTS
+            )
+        )
         if len(generated) <= cap:
             return tuple(generated)
-        # Keep the opening event, the bounded body, and the closing event so the
+        # Keep the opening event, the bounded body, and the closing event
         # match still reads as a complete synthetic match.
         body = generated[1:-1][: max(0, cap - 2)]
-        return tuple([generated[0], *body, generated[-1]])
+        return (generated[0], *body, generated[-1])
 
     # ----------------------------------------------------------------- status
 
     def register(self, plan: DemoRunPlan) -> DemoRunStatus:
-        status = DemoRunStatus(run_id=plan.run_id, match_id=plan.match_id, seed=plan.seed,
-                               status="running", event_count=0)
+        status = DemoRunStatus(
+            run_id=plan.run_id,
+            match_id=plan.match_id,
+            seed=plan.seed,
+            status="running",
+            event_count=0,
+        )
         self._runs[plan.run_id] = status
         return status
 

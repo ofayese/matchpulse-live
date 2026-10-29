@@ -1,0 +1,64 @@
+1
+00:00:00,000 --> 00:00:08,000
+MatchPulse Live runs on Azure Container Apps.
+This uses synthetic match events only.
+
+2
+00:00:08,000 --> 00:00:18,000
+The scenario follows Northbridge City
+and Harbor United, seeded and fictional.
+
+3
+00:00:18,000 --> 00:00:28,000
+Events create evidence-linked insights
+for each moment in the match.
+
+4
+00:00:28,000 --> 00:00:38,000
+Northbridge City opens the scoring
+from an accepted synthetic event.
+
+5
+00:00:38,000 --> 00:00:46,000
+Replaying the same event does not
+change the score or duplicate goals.
+
+6
+00:00:46,000 --> 00:00:54,000
+Out-of-order events are rejected
+without corrupting match state.
+
+7
+00:00:54,000 --> 00:01:03,000
+Fan mode makes the same verified
+moment immediate and clear.
+
+8
+00:01:03,000 --> 00:01:12,000
+Analyst mode adds the calculation,
+inputs, and evidence identifiers.
+
+9
+00:01:12,000 --> 00:01:20,000
+Broadcaster mode condenses the insight
+for a live overlay.
+
+10
+00:01:20,000 --> 00:01:27,000
+Spanish and French localize the copy
+while preserving the same match facts.
+
+11
+00:01:27,000 --> 00:01:39,000
+Northbridge City wins two-one.
+The recap cites accepted event evidence.
+
+12
+00:01:39,000 --> 00:01:48,000
+Foundry and model calls are disabled.
+Fallback remains deterministic.
+
+13
+00:01:48,000 --> 00:01:55,000
+MatchPulse Live: hosted and synthetic.
+No live external data is used.

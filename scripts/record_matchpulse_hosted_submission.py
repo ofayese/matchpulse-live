@@ -37,6 +37,10 @@ from PIL import Image, ImageDraw
 
 WINDOW_LIMIT_SECONDS = 60 * 60
 VIDEO_DURATION_SECONDS = 115.0
+TECHNICAL_RIBBON_HEIGHT = 64
+APPLICATION_SAFE_TOP = 78
+APPLICATION_SAFE_HEIGHT = 800
+APPLICATION_SAFE_BOTTOM = APPLICATION_SAFE_TOP + APPLICATION_SAFE_HEIGHT
 CANDIDATE_NAME = "matchpulse-submission-hosted-candidate.mp4"
 LOCAL_TTS_AUDIO_NAME = "matchpulse-hosted-narration-kokoro-bf-emma.wav"
 LOCAL_TTS_MANIFEST_NAME = "matchpulse-hosted-narration-kokoro-bf-emma.manifest.json"
@@ -689,11 +693,35 @@ def hosted_shots(capture: dict[str, Any]) -> list[recorder.ShotSpec]:
             ).replace("Mode: Local Immutable Container", "Hosting: Azure Container Apps")
             for line in shot.callout_lines
         )
+        if shot.state_key not in {"card_title", "card_closing"}:
+            scale = min(
+                recorder.VIDEO_WIDTH / recorder.VIDEO_WIDTH,
+                APPLICATION_SAFE_HEIGHT / recorder.VIDEO_HEIGHT,
+            )
+            frame_width = round(recorder.VIDEO_WIDTH * scale)
+            frame_height = round(recorder.VIDEO_HEIGHT * scale)
+            offset_x = (recorder.VIDEO_WIDTH - frame_width) // 2
+            offset_y = APPLICATION_SAFE_TOP + (
+                APPLICATION_SAFE_HEIGHT - frame_height
+            ) // 2
+            cursor_start = (
+                round(shot.cursor_start[0] * scale + offset_x),
+                round(shot.cursor_start[1] * scale + offset_y),
+            )
+            cursor_end = (
+                round(shot.cursor_end[0] * scale + offset_x),
+                round(shot.cursor_end[1] * scale + offset_y),
+            )
+        else:
+            cursor_start = shot.cursor_start
+            cursor_end = shot.cursor_end
         hosted.append(
             replace(
                 shot,
                 banner_title=shot.banner_title.replace("LOCAL", "HOSTED"),
                 callout_lines=lines,
+                cursor_start=cursor_start,
+                cursor_end=cursor_end,
             )
         )
     return hosted
@@ -738,21 +766,21 @@ def render_hosted_card(title: str, subtitle: str, lines: tuple[str, ...], footer
 def hosted_composite(
     state_images: dict[str, Image.Image],
     shot: recorder.ShotSpec,
-    base_compositor: Any,
 ) -> Image.Image:
     if shot.state_key == "card_title":
         return render_hosted_card(
             "MATCHPULSE LIVE",
             "EVIDENCE-AWARE MATCH STORYTELLING",
             (
-                "Hosting: Azure Container Apps",
+                "Deployment: Azure Container Apps",
+                "Recording: Local Docker · same pinned image",
                 "Scenario: matchpulse-demo-001 · Seed 20261024",
                 "Fictional teams: Northbridge City vs Harbor United",
                 "Data: SEEDED SYNTHETIC MATCH DATA",
                 "Foundry: disabled · Model calls: zero",
                 f"Image: {recorder.EXPECTED_IMAGE_DIGEST}",
             ),
-            "Hosted endpoint verified · no live external data source",
+            "Local pinned-image recording · no live external data",
         )
     if shot.state_key == "card_closing":
         return render_hosted_card(
@@ -763,20 +791,76 @@ def hosted_composite(
                 "Fan · Analyst · Broadcaster",
                 "English · Spanish · French",
                 "Evidence-linked recap · deterministic fallback",
-                "Hosted on Azure Container Apps",
+                "Deployed: Azure Container Apps · recorded locally",
                 "SEEDED SYNTHETIC MATCH DATA · FOUNDRY DISABLED",
             ),
-            "ofayese/matchpulse-live · synthetic demonstration",
+            "Same pinned image · synthetic demonstration",
         )
 
-    base = base_compositor(state_images, shot)
-    draw = ImageDraw.Draw(base)
-    draw.rectangle([0, 0, recorder.VIDEO_WIDTH, 38], fill=(6, 21, 33))
-    draw.line([(0, 36), (recorder.VIDEO_WIDTH, 36)], fill=(200, 245, 96), width=2)
+    source = state_images[shot.state_key].convert("RGB")
+    draw = ImageDraw.Draw(source)
+    card_x1, card_y1, card_x2, card_y2 = 42, 660, 760, 915
+    draw.rectangle(
+        [card_x1, card_y1, card_x2, card_y2],
+        fill=(8, 25, 40),
+        outline=(22, 184, 243),
+        width=2,
+    )
+    draw.rectangle(
+        [card_x1, card_y1, card_x2, card_y1 + 38], fill=(16, 47, 70)
+    )
+    fonts = recorder._load_fonts()
     draw.text(
-        (24, 7),
-        f"HOSTED AZURE DEMONSTRATION · SEEDED SYNTHETIC DATA · NO LIVE EXTERNAL DATA  |  {shot.banner_title}",
-        font=recorder._load_fonts()["mono_sm"],
+        (card_x1 + 16, card_y1 + 8),
+        shot.callout_title,
+        font=fonts["small"],
+        fill=(200, 245, 96),
+    )
+    y = card_y1 + 48
+    for line in shot.callout_lines[:6]:
+        draw.text(
+            (card_x1 + 16, y),
+            line,
+            font=fonts["mono_sm"],
+            fill=(225, 239, 250),
+        )
+        y += 32
+
+    scale = min(
+        recorder.VIDEO_WIDTH / source.width,
+        APPLICATION_SAFE_HEIGHT / source.height,
+    )
+    frame_width = round(source.width * scale)
+    frame_height = round(source.height * scale)
+    resized = source.resize(
+        (frame_width, frame_height), Image.Resampling.LANCZOS
+    )
+    base = Image.new("RGB", (recorder.VIDEO_WIDTH, recorder.VIDEO_HEIGHT), (7, 26, 43))
+    offset_x = (recorder.VIDEO_WIDTH - frame_width) // 2
+    offset_y = APPLICATION_SAFE_TOP + (APPLICATION_SAFE_HEIGHT - frame_height) // 2
+    base.paste(resized, (offset_x, offset_y))
+
+    draw = ImageDraw.Draw(base)
+    draw.rectangle(
+        [0, 0, recorder.VIDEO_WIDTH, TECHNICAL_RIBBON_HEIGHT],
+        fill=(6, 21, 33),
+    )
+    draw.line(
+        [(0, TECHNICAL_RIBBON_HEIGHT - 2), (recorder.VIDEO_WIDTH, TECHNICAL_RIBBON_HEIGHT - 2)],
+        fill=(200, 245, 96),
+        width=2,
+    )
+    draw.text(
+        (24, 3),
+        "DEPLOYED: AZURE CONTAINER APPS · RECORDED: LOCAL DOCKER, SAME PINNED IMAGE · "
+        "SEEDED SYNTHETIC DATA · NO LIVE EXTERNAL DATA",
+        font=fonts["mono_sm"],
+        fill=(200, 245, 96),
+    )
+    draw.text(
+        (24, 37),
+        shot.banner_title,
+        font=fonts["mono_sm"],
         fill=(200, 245, 96),
     )
     return base
@@ -842,7 +926,7 @@ def record_candidate(
     capture = _capture_hosted_take(tools, base_url, authority)
     shots = hosted_shots(capture)
     original_compositor = recorder.composite_shot_base
-    recorder.composite_shot_base = lambda images, shot: hosted_composite(images, shot, original_compositor)
+    recorder.composite_shot_base = lambda images, shot: hosted_composite(images, shot)
     try:
         recorder.encode_video_with_ffmpeg(
             ffmpeg_bin=tools["ffmpeg_bin"],
@@ -852,6 +936,7 @@ def record_candidate(
             wav_bytes=narration,
             total_duration_seconds=VIDEO_DURATION_SECONDS,
             cues=cues,
+            hosted_layout=True,
         )
     finally:
         recorder.composite_shot_base = original_compositor

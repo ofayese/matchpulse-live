@@ -1,3 +1,4 @@
+# cspell:ignore containerapp cognitiveservices opencontainers
 """Positive and negative security tests for the protected release workflow and Dockerfile OCI labels."""
 
 from __future__ import annotations
@@ -13,7 +14,9 @@ DOCKERFILE_PATH = ROOT / "Dockerfile"
 
 
 def _extract_job_block(workflow_text: str, job_name: str) -> str:
-    pattern = re.compile(rf"(?ms)^  {re.escape(job_name)}:\n(.*?)(?=^  [a-zA-Z0-9_-]+:\n|\Z)")
+    pattern = re.compile(
+        rf"(?ms)^  {re.escape(job_name)}:\n(.*?)(?=^  [a-zA-Z0-9_-]+:\n|\Z)"
+    )
     match = pattern.search(workflow_text)
     if not match:
         raise ValueError(f"job '{job_name}' not found in workflow")
@@ -28,7 +31,9 @@ def validate_release_workflow_security(workflow_text: str) -> list[str]:
         errors.append("workflow_dispatch trigger is missing")
 
     if "expected_commit:" not in workflow_text or "required: true" not in workflow_text:
-        errors.append("explicit required expected_commit input is missing from workflow_dispatch")
+        errors.append(
+            "explicit required expected_commit input is missing from workflow_dispatch"
+        )
 
     if "remediation/pebble-removal" in workflow_text:
         errors.append("stale remediation/pebble-removal branch reference still present")
@@ -37,7 +42,9 @@ def validate_release_workflow_security(workflow_text: str) -> list[str]:
         errors.append("legacy post-publication approval job structure still present")
 
     # Top-level permissions must be read-only
-    top_perm_match = re.search(r"(?ms)^permissions:\n(.*?)(?=^[a-zA-Z0-9_-]+:)", workflow_text)
+    top_perm_match = re.search(
+        r"(?ms)^permissions:\n(.*?)(?=^[a-zA-Z0-9_-]+:)", workflow_text
+    )
     if not top_perm_match:
         errors.append("top-level permissions block is missing")
     else:
@@ -62,7 +69,9 @@ def validate_release_workflow_security(workflow_text: str) -> list[str]:
 
     if validate_block:
         if "github.ref == 'refs/heads/main'" not in validate_block:
-            errors.append("validate job does not enforce github.ref == 'refs/heads/main'")
+            errors.append(
+                "validate job does not enforce github.ref == 'refs/heads/main'"
+            )
         for forbidden_in_validate in (
             "docker/login-action",
             "docker push",
@@ -73,23 +82,36 @@ def validate_release_workflow_security(workflow_text: str) -> list[str]:
             "push: true",
         ):
             if forbidden_in_validate in validate_block:
-                errors.append(f"validate job must not contain '{forbidden_in_validate}'")
+                errors.append(
+                    f"validate job must not contain '{forbidden_in_validate}'"
+                )
         if "push: false" not in validate_block:
             errors.append("validate job must build locally with push: false")
         if "OCI_REVISION=${{ env.RELEASE_COMMIT }}" not in validate_block:
-            errors.append("validate job must pass OCI_REVISION=${{ env.RELEASE_COMMIT }}")
+            errors.append(
+                "validate job must pass OCI_REVISION=${{ env.RELEASE_COMMIT }}"
+            )
         if "OCI_SOURCE=https://github.com/${{ env.REPOSITORY }}" not in validate_block:
-            errors.append("validate job must pass OCI_SOURCE=https://github.com/${{ env.REPOSITORY }}")
+            errors.append(
+                "validate job must pass OCI_SOURCE=https://github.com/${{ env.REPOSITORY }}"
+            )
         if "scripts/hardened_smoke_test.py" not in validate_block:
             errors.append("validate job must run scripts/hardened_smoke_test.py")
 
     if publish_block:
-        if "needs: [validate]" not in publish_block and "needs: validate" not in publish_block:
+        if (
+            "needs: [validate]" not in publish_block
+            and "needs: validate" not in publish_block
+        ):
             errors.append("publish job must depend on validate job (needs: [validate])")
         if "environment: release-attestation" not in publish_block:
-            errors.append("publish job must be gated by environment: release-attestation")
+            errors.append(
+                "publish job must be gated by environment: release-attestation"
+            )
         if "github.ref == 'refs/heads/main'" not in publish_block:
-            errors.append("publish job does not enforce github.ref == 'refs/heads/main'")
+            errors.append(
+                "publish job does not enforce github.ref == 'refs/heads/main'"
+            )
         for required_in_publish in (
             "packages: write",
             "id-token: write",
@@ -97,7 +119,7 @@ def validate_release_workflow_security(workflow_text: str) -> list[str]:
             "docker/login-action",
             "docker push",
             "actions/attest",
-            'subject-name: ghcr.io/ofayese/matchpulse-live',
+            "subject-name: ghcr.io/ofayese/matchpulse-live",
             "subject-digest: ${{ steps.digest.outputs.digest }}",
             "--source-ref",
             "--source-digest",
@@ -108,9 +130,17 @@ def validate_release_workflow_security(workflow_text: str) -> list[str]:
     if ":latest" in workflow_text:
         errors.append("mutable ':latest' tag must not be used in release-attest.yml")
 
-    for azure_forbidden in ("azure/login", "az deployment", "az group", "az containerapp", "az cognitiveservices"):
+    for azure_forbidden in (
+        "azure/login",
+        "az deployment",
+        "az group",
+        "az containerapp",
+        "az cognitiveservices",
+    ):
         if azure_forbidden in workflow_text:
-            errors.append(f"release workflow must not perform Azure operation '{azure_forbidden}'")
+            errors.append(
+                f"release workflow must not perform Azure operation '{azure_forbidden}'"
+            )
 
     return errors
 
@@ -126,10 +156,20 @@ def validate_dockerfile_oci_labels(dockerfile_text: str) -> list[str]:
         errors.append("Dockerfile runtime stage is missing 'ARG OCI_REVISION'")
     if not re.search(r"(?m)^ARG\s+OCI_SOURCE\s*$", runtime_stage):
         errors.append("Dockerfile runtime stage is missing 'ARG OCI_SOURCE'")
-    if not re.search(r"(?m)^LABEL\s+org\.opencontainers\.image\.revision=\$OCI_REVISION\s*$", runtime_stage):
-        errors.append("Dockerfile runtime stage is missing 'LABEL org.opencontainers.image.revision=$OCI_REVISION'")
-    if not re.search(r"(?m)^LABEL\s+org\.opencontainers\.image\.source=\$OCI_SOURCE\s*$", runtime_stage):
-        errors.append("Dockerfile runtime stage is missing 'LABEL org.opencontainers.image.source=$OCI_SOURCE'")
+    if not re.search(
+        r"(?m)^LABEL\s+org\.opencontainers\.image\.revision=\$OCI_REVISION\s*$",
+        runtime_stage,
+    ):
+        errors.append(
+            "Dockerfile runtime stage is missing 'LABEL org.opencontainers.image.revision=$OCI_REVISION'"
+        )
+    if not re.search(
+        r"(?m)^LABEL\s+org\.opencontainers\.image\.source=\$OCI_SOURCE\s*$",
+        runtime_stage,
+    ):
+        errors.append(
+            "Dockerfile runtime stage is missing 'LABEL org.opencontainers.image.source=$OCI_SOURCE'"
+        )
     return errors
 
 
@@ -149,19 +189,30 @@ def test_dockerfile_declares_standard_oci_args_and_labels():
     "mutator,expected_error_substring",
     [
         (
-            lambda t: t.replace("environment: release-attestation", "environment: unsecured"),
+            lambda t: t.replace(
+                "environment: release-attestation", "environment: unsecured"
+            ),
             "publish job must be gated by environment: release-attestation",
         ),
         (
-            lambda t: t.replace("github.ref == 'refs/heads/main'", "github.ref == 'refs/heads/remediation/pebble-removal'"),
+            lambda t: t.replace(
+                "github.ref == 'refs/heads/main'",
+                "github.ref == 'refs/heads/remediation/pebble-removal'",
+            ),
             "stale remediation/pebble-removal branch reference still present",
         ),
         (
-            lambda t: t.replace("permissions:\n  contents: read", "permissions:\n  contents: read\n  packages: write"),
+            lambda t: t.replace(
+                "permissions:\n  contents: read",
+                "permissions:\n  contents: read\n  packages: write",
+            ),
             "top-level permissions must not grant 'packages: write'",
         ),
         (
-            lambda t: t.replace("      - name: Set up Python", "      - uses: docker/login-action@v3\n      - name: Set up Python"),
+            lambda t: t.replace(
+                "      - name: Set up Python",
+                "      - uses: docker/login-action@v3\n      - name: Set up Python",
+            ),
             "validate job must not contain 'docker/login-action'",
         ),
         (
@@ -169,7 +220,8 @@ def test_dockerfile_declares_standard_oci_args_and_labels():
             "publish job must depend on validate job",
         ),
         (
-            lambda t: t + "\n      - run: docker push ghcr.io/ofayese/matchpulse-live:latest\n",
+            lambda t: t
+            + "\n      - run: docker push ghcr.io/ofayese/matchpulse-live:latest\n",
             "mutable ':latest' tag must not be used",
         ),
         (
@@ -178,7 +230,9 @@ def test_dockerfile_declares_standard_oci_args_and_labels():
         ),
     ],
 )
-def test_release_workflow_validator_rejects_unsafe_mutations(mutator, expected_error_substring):
+def test_release_workflow_validator_rejects_unsafe_mutations(
+    mutator, expected_error_substring
+):
     base_text = WORKFLOW_PATH.read_text(encoding="utf-8")
     mutated = mutator(base_text)
     errors = validate_release_workflow_security(mutated)
@@ -197,16 +251,22 @@ def test_release_workflow_validator_rejects_unsafe_mutations(mutator, expected_e
             "missing 'ARG OCI_SOURCE'",
         ),
         (
-            lambda t: t.replace("LABEL org.opencontainers.image.revision=$OCI_REVISION\n", ""),
+            lambda t: t.replace(
+                "LABEL org.opencontainers.image.revision=$OCI_REVISION\n", ""
+            ),
             "missing 'LABEL org.opencontainers.image.revision=$OCI_REVISION'",
         ),
         (
-            lambda t: t.replace("LABEL org.opencontainers.image.source=$OCI_SOURCE\n", ""),
+            lambda t: t.replace(
+                "LABEL org.opencontainers.image.source=$OCI_SOURCE\n", ""
+            ),
             "missing 'LABEL org.opencontainers.image.source=$OCI_SOURCE'",
         ),
     ],
 )
-def test_dockerfile_validator_rejects_missing_oci_instructions(mutator, expected_error_substring):
+def test_dockerfile_validator_rejects_missing_oci_instructions(
+    mutator, expected_error_substring
+):
     base_text = DOCKERFILE_PATH.read_text(encoding="utf-8")
     mutated = mutator(base_text)
     errors = validate_dockerfile_oci_labels(mutated)

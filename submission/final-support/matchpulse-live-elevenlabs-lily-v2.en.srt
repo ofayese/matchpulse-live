@@ -1,0 +1,107 @@
+1
+00:00:00,000 --> 00:00:05,060
+Welcome to MatchPulse Live, hosted on
+Azure Container Apps. This fictional match
+
+2
+00:00:05,060 --> 00:00:09,740
+follows Northbridge City and Harbor United
+through synthetic football events.
+
+3
+00:00:10,160 --> 00:00:14,160
+The analysis uses accepted events, not a
+live feed.
+
+4
+00:00:17,920 --> 00:00:21,360
+Each match moment links to the event the
+system accepted.
+
+5
+00:00:21,680 --> 00:00:26,400
+You can trace the source behind an insight
+and inspect its supporting evidence.
+
+6
+00:00:27,920 --> 00:00:31,760
+After a synthetic goal event is accepted,
+Northbridge City’s
+
+7
+00:00:31,760 --> 00:00:36,240
+score increases. The event stays linked to
+its resulting insight.
+
+8
+00:00:37,980 --> 00:00:42,160
+Replaying the same event does not add
+another goal or change the score.
+
+9
+00:00:42,480 --> 00:00:47,260
+Out-of-order events are rejected, so
+accepted match state stays consistent.
+
+10
+00:00:53,920 --> 00:00:57,700
+Fan view puts the verified moment first in
+a clear summary.
+
+11
+00:00:58,340 --> 00:01:01,060
+Accepted event evidence keeps it in
+context.
+
+12
+00:01:02,940 --> 00:01:07,840
+Analyst view shows the calculation,
+inputs, and evidence identifiers,
+
+13
+00:01:08,160 --> 00:01:12,220
+so you can trace how an insight was
+formed. Broadcaster view
+
+14
+00:01:12,220 --> 00:01:16,460
+condenses that same insight and match
+facts for a live overlay.
+
+15
+00:01:19,920 --> 00:01:21,420
+English, Spanish, and French
+
+16
+00:01:21,420 --> 00:01:25,280
+versions change the wording but preserve
+the same match evidence.
+
+17
+00:01:27,020 --> 00:01:30,380
+Northbridge City beats Harbor United two
+goals to one.
+
+18
+00:01:30,520 --> 00:01:35,140
+The recap connects the score to accepted
+match events, not outside data.
+
+19
+00:01:38,920 --> 00:01:41,660
+This deployment uses deterministic
+fallback.
+
+20
+00:01:41,820 --> 00:01:45,260
+Foundry is disabled, with zero model calls
+in the demo.
+
+21
+00:01:47,920 --> 00:01:49,840
+This demo uses synthetic data,
+
+22
+00:01:49,920 --> 00:01:53,150
+not a live feed. Both teams and the match
+are fictional.

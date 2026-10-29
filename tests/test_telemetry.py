@@ -1,3 +1,4 @@
+# cspell:ignore delenv
 """Optional telemetry tests.
 
 Telemetry must stay inert without configuration, must only ever record
@@ -25,7 +26,7 @@ class _RecordingSink(MetricSink):
 
 
 class _FailingSink(MetricSink):
-    def emit(self, name: str, value: float, dimensions: dict[str, str]) -> None:
+    def emit(self, _name: str, _value: float, _dimensions: dict[str, str]) -> None:
         raise RuntimeError("exporter unavailable")
 
 
@@ -74,7 +75,7 @@ def test_identifiers_never_become_metric_dimensions():
     telemetry = Telemetry(sink=sink)
     telemetry.record_http("/v1/matches/59dccafac618d9d2f3f0c1dc1d491ddec4ae537b/state", "GET", 200, 1.0)
     telemetry.record_http("/v1/matches/demo-abc123def456/state", "GET", 200, 1.0)
-    for _name, _value, dimensions in sink.emitted:
+    for _, _, dimensions in sink.emitted:
         assert dimensions["route_template"] == "unknown"
 
 
@@ -110,7 +111,12 @@ def test_aggregate_counters_are_exposed():
     assert snapshot["events"] == {"accepted": 2, "rejected": 1, "duplicate": 1}
     assert snapshot["foundry"]["attempt"] == 2
     assert snapshot["foundry"]["fallback"] == 1
-    assert snapshot["websocket"] == {"connect": 1, "disconnect": 0, "send": 3, "drop": 0}
+    assert snapshot["websocket"] == {
+        "connect": 1,
+        "disconnect": 0,
+        "send": 3,
+        "drop": 0,
+    }
 
 
 def test_negative_and_non_numeric_values_are_ignored():

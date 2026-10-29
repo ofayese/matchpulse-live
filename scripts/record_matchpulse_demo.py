@@ -1587,12 +1587,22 @@ def _load_fonts() -> dict[str, ImageFont.FreeTypeFont | ImageFont.ImageFont]:
             "mono": ImageFont.truetype(str(consolas), 19),
             "mono_sm": ImageFont.truetype(str(consolas), 16),
             "caption": ImageFont.truetype(str(segoe_bold), 28),
+            "caption_large": ImageFont.truetype(str(segoe_bold), 42),
         }
     except Exception:
         default = ImageFont.load_default()
         return {
             k: default
-            for k in ("h1", "h2", "body", "small", "mono", "mono_sm", "caption")
+            for k in (
+                "h1",
+                "h2",
+                "body",
+                "small",
+                "mono",
+                "mono_sm",
+                "caption",
+                "caption_large",
+            )
         }
 
 
@@ -1730,8 +1740,10 @@ def draw_frame_overlays(
     elapsed_sec: float,
     total_sec: float,
     caption_lines: tuple[str, ...] | None = None,
+    caption_layout: str | None = None,
+    timecode_y: int | None = 7,
 ) -> Image.Image:
-    """Draw animated cursor, progress indicator, and optional burned-in captions on a single frame."""
+    """Draw a cursor, progress indicator, optional timecode, and captions on one frame."""
     fonts = _load_fonts()
     frame = base_img.copy()
     draw = ImageDraw.Draw(frame)
@@ -1742,17 +1754,18 @@ def draw_frame_overlays(
     draw.rectangle([0, VIDEO_HEIGHT - 6, VIDEO_WIDTH, VIDEO_HEIGHT], fill=(15, 38, 56))
     draw.rectangle([0, VIDEO_HEIGHT - 6, bar_w, VIDEO_HEIGHT], fill=(22, 184, 243))
 
-    # Timecode stamp in top-right disclosure ribbon
+    # Hosted layouts place the timecode below the app and caption safe areas.
     mins = int(elapsed_sec) // 60
     secs = elapsed_sec - (mins * 60)
     t_mins = int(total_sec) // 60
     t_secs = int(total_sec) % 60
-    draw.text(
-        (VIDEO_WIDTH - 245, 7),
-        f"TC {mins:02d}:{secs:04.1f} / {t_mins:02d}:{t_secs:02d}.0",
-        font=fonts["mono_sm"],
-        fill=(237, 247, 255),
-    )
+    if timecode_y is not None:
+        draw.text(
+            (VIDEO_WIDTH - 245, timecode_y),
+            f"TC {mins:02d}:{secs:04.1f} / {t_mins:02d}:{t_secs:02d}.0",
+            font=fonts["mono_sm"],
+            fill=(237, 247, 255),
+        )
 
     # Deterministic cursor pointer with subtle pulse ring
     cx, cy = cursor_xy
@@ -1773,7 +1786,48 @@ def draw_frame_overlays(
     ]
     draw.polygon(poly, fill=(237, 247, 255), outline=(7, 26, 43))
 
-    if caption_lines:
+    if caption_lines and caption_layout in {"opening-card", "application-safe"}:
+        if len(caption_lines) > 2:
+            raise RecordingError("Safe caption layout supports at most two lines")
+        font = fonts["caption_large"]
+        line_gap = 8
+        text_bounds = [
+            draw.textbbox((0, 0), line, font=font) for line in caption_lines
+        ]
+        line_heights = [bounds[3] - bounds[1] for bounds in text_bounds]
+        text_widths = [bounds[2] - bounds[0] for bounds in text_bounds]
+        box_w = 1576
+        padding_x = 32
+        padding_y = 18
+        if any(width > box_w - padding_x * 2 for width in text_widths):
+            raise RecordingError("Caption line exceeds the safe panel width")
+        text_height = sum(line_heights) + line_gap * (len(caption_lines) - 1)
+        box_h = text_height + padding_y * 2
+        bx1 = (VIDEO_WIDTH - box_w) // 2
+        bx2 = bx1 + box_w
+        if caption_layout == "opening-card":
+            box_y1 = 820 - box_h // 2
+        else:
+            box_y1 = 1022 - box_h
+        box_y2 = box_y1 + box_h
+        draw.rectangle(
+            [bx1, box_y1, bx2, box_y2],
+            fill=(5, 16, 26),
+            outline=(22, 184, 243),
+            width=2,
+        )
+        text_y = box_y1 + padding_y
+        for line, bounds, height in zip(
+            caption_lines, text_bounds, line_heights, strict=True
+        ):
+            draw.text(
+                ((VIDEO_WIDTH - (bounds[2] - bounds[0])) // 2, text_y - bounds[1]),
+                line,
+                font=font,
+                fill=(255, 255, 255),
+            )
+            text_y += height + line_gap
+    elif caption_lines:
         box_w = 1080
         box_h = 44 * len(caption_lines) + 24
         bx1 = (VIDEO_WIDTH - box_w) // 2
@@ -2641,6 +2695,7 @@ def encode_video_with_ffmpeg(
     wav_bytes: bytes,
     total_duration_seconds: float,
     cues: list[SrtCue] | None = None,
+    hosted_layout: bool = False,
 ) -> None:
     """Stream 30 fps raw RGB24 frames into FFmpeg along with the normalized WAV audio track."""
     total_frames = int(round(total_duration_seconds * VIDEO_FPS))
@@ -2663,6 +2718,7 @@ def encode_video_with_ffmpeg(
         total_frames=total_frames,
         vf_filter=vf_filter,
         cues=cues,
+        hosted_layout=hosted_layout,
     )
 
 
@@ -2677,6 +2733,7 @@ def _encode_video_and_mux_audio_no_tempfiles(
     total_frames: int,
     vf_filter: str,
     cues: list[SrtCue] | None,
+    hosted_layout: bool,
 ) -> None:
     """Encode raw frames and normalized WAV audio directly into output_path using a loopback TCP socket for audio and stdin for video (zero disk temp files)."""
     audio_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -2755,6 +2812,7 @@ def _encode_video_and_mux_audio_no_tempfiles(
     )
     assert proc.stdin is not None
 
+    pipe_error: BrokenPipeError | None = None
     try:
         shot_idx = 0
         cue_idx = 0
@@ -2799,10 +2857,29 @@ def _encode_video_and_mux_audio_no_tempfiles(
                 elapsed_sec=elapsed_sec,
                 total_sec=total_duration_seconds,
                 caption_lines=active_caption,
+                caption_layout=(
+                    "opening-card"
+                    if hosted_layout
+                    and shot.state_key in {"card_title", "card_closing"}
+                    else "application-safe"
+                    if hosted_layout
+                    else None
+                ),
+                timecode_y=(
+                    1048
+                    if hosted_layout
+                    and shot.state_key not in {"card_title", "card_closing"}
+                    else 7
+                ),
             )
             proc.stdin.write(frame_img.tobytes())
+    except BrokenPipeError as exc:
+        pipe_error = exc
     finally:
-        proc.stdin.close()
+        try:
+            proc.stdin.close()
+        except BrokenPipeError as exc:
+            pipe_error = pipe_error or exc
 
     stderr_bytes = proc.stderr.read() if proc.stderr else b""
     rc = proc.wait()
@@ -2811,6 +2888,10 @@ def _encode_video_and_mux_audio_no_tempfiles(
         raise RecordingError(
             f"FFmpeg encoding failed for {output_path.name}: {stderr_bytes.decode('utf-8', errors='replace')}"
         )
+    if pipe_error is not None:
+        raise RecordingError(
+            f"FFmpeg closed the frame input unexpectedly for {output_path.name}"
+        ) from pipe_error
     if send_exc:
         raise RecordingError(
             f"Audio stream error during encoding of {output_path.name}: {send_exc[0]}"

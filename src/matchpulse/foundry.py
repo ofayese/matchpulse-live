@@ -1,3 +1,4 @@
+# cspell:ignore Northbridge capitalised causa gracias porque grâce parce donc unconfigured
 from __future__ import annotations
 
 import abc
@@ -26,7 +27,9 @@ MAX_PROMPT_PAYLOAD_BYTES = 4096
 MAX_OUTPUT_TOKENS = 128
 RETRY_COUNT = 0
 
-_IN_REWRITE: contextvars.ContextVar[bool] = contextvars.ContextVar("_IN_REWRITE", default=False)
+_IN_REWRITE: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "_IN_REWRITE", default=False
+)
 
 AUTH_API_KEY = "api_key"
 AUTH_MANAGED_IDENTITY = "managed_identity"
@@ -44,17 +47,38 @@ MAX_OVERLAY_LENGTH = 90
 # Team identifiers look like "Northbridge-FC"; player identifiers look like "NB-9".
 _TEAM_LIKE_RE = re.compile(r"\b[A-Z][A-Za-z]+-[A-Z][A-Za-z]+\b")
 _PLAYER_LIKE_RE = re.compile(r"\b[A-Z]{2}-\d+\b")
-_UUID_RE = re.compile(r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b")
+_UUID_RE = re.compile(
+    r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
+)
 # Two consecutive capitalised words are treated as a proper name unless both
 # words already appear in the deterministic source text.
-_PROPER_NAME_RE = re.compile(r"\b([A-Z][A-Za-z'’-]{2,})\s+([A-Z][A-Za-z'’-]{2,})\b")
-_MARKUP_RE = re.compile(r"<\s*/?\s*[a-zA-Z][^>]{0,200}>")
+_PROPER_NAME_RE = re.compile(
+    r"\b([A-Z][A-Za-z'’-]{2,})\s+([A-Z][A-Za-z'’-]{2,})\b"
+)
+_MARKUP_RE = re.compile(r"<\s*(?:/\s*)?[a-zA-Z][^>]{0,200}>")
 _EVENT_HANDLER_RE = re.compile(r"\bon[a-zA-Z]{3,20}\s*=")
 _CAUSAL_PHRASES = (
-    "because", "because of", "caused by", "due to", "thanks to", "as a result of",
-    "led to", "resulted in", "so that", "owing to", "thanks to the", "means that",
-    "por culpa de", "a causa de", "gracias a", "porque", "por lo tanto",
-    "à cause de", "grâce à", "parce que", "donc",
+    "because",
+    "because of",
+    "caused by",
+    "due to",
+    "thanks to",
+    "as a result of",
+    "led to",
+    "resulted in",
+    "so that",
+    "owing to",
+    "thanks to the",
+    "means that",
+    "por culpa de",
+    "a causa de",
+    "gracias a",
+    "porque",
+    "por lo tanto",
+    "à cause de",
+    "grâce à",
+    "parce que",
+    "donc",
 )
 _NUMBER_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?")
 
@@ -122,7 +146,9 @@ class FoundrySettings:
             return None
 
         try:
-            timeout_seconds = float(os.getenv("FOUNDRY_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS))
+            timeout_seconds = float(
+                os.getenv("FOUNDRY_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS)
+            )
         except ValueError:
             timeout_seconds = DEFAULT_TIMEOUT_SECONDS
         if timeout_seconds <= 0:
@@ -132,12 +158,20 @@ class FoundrySettings:
             endpoint=endpoint,
             deployment=deployment,
             api_key=api_key,
-            api_version=os.getenv("FOUNDRY_API_VERSION", DEFAULT_API_VERSION).strip() or DEFAULT_API_VERSION,
+            api_version=os.getenv(
+                "FOUNDRY_API_VERSION", DEFAULT_API_VERSION
+            ).strip()
+            or DEFAULT_API_VERSION,
             timeout_seconds=timeout_seconds,
             auth_mode=requested,
-            scope=os.getenv("FOUNDRY_AZURE_SCOPE", DEFAULT_SCOPE).strip() or DEFAULT_SCOPE,
-            max_concurrency=_positive_int("FOUNDRY_MAX_CONCURRENCY", DEFAULT_MAX_CONCURRENCY),
-            call_budget=_positive_int("FOUNDRY_CALL_BUDGET", DEFAULT_CALL_BUDGET),
+            scope=os.getenv("FOUNDRY_AZURE_SCOPE", DEFAULT_SCOPE).strip()
+            or DEFAULT_SCOPE,
+            max_concurrency=_positive_int(
+                "FOUNDRY_MAX_CONCURRENCY", DEFAULT_MAX_CONCURRENCY
+            ),
+            call_budget=_positive_int(
+                "FOUNDRY_CALL_BUDGET", DEFAULT_CALL_BUDGET
+            ),
         )
 
 
@@ -183,7 +217,12 @@ class ManagedIdentityCredentialProvider(FoundryCredentialProvider):
 
     name = AUTH_MANAGED_IDENTITY
 
-    def __init__(self, scope: str = DEFAULT_SCOPE, credential: Any | None = None, refresh_margin_seconds: float = 120.0) -> None:
+    def __init__(
+        self,
+        scope: str = DEFAULT_SCOPE,
+        credential: Any | None = None,
+        refresh_margin_seconds: float = 120.0,
+    ) -> None:
         self._scope = scope
         self._credential = credential
         self._refresh_margin_seconds = refresh_margin_seconds
@@ -193,20 +232,26 @@ class ManagedIdentityCredentialProvider(FoundryCredentialProvider):
     def _ensure_credential(self) -> Any:
         if self._credential is None:
             try:
-                from azure.identity import DefaultAzureCredential
+                from azure.identity import DefaultAzureCredential  # type: ignore
             except ImportError as exc:
-                raise FoundryCredentialError("azure-identity is not installed") from exc
+                raise FoundryCredentialError(
+                    "azure-identity is not installed"
+                ) from exc
             self._credential = DefaultAzureCredential()
         return self._credential
 
     def headers(self) -> dict[str, str]:
         now = time.time()
-        if not self._token or now >= (self._expires_at - self._refresh_margin_seconds):
+        if not self._token or now >= (
+            self._expires_at - self._refresh_margin_seconds
+        ):
             credential = self._ensure_credential()
             try:
                 token = credential.get_token(self._scope)
             except Exception as exc:
-                raise FoundryCredentialError(f"managed identity token request failed: {type(exc).__name__}") from exc
+                raise FoundryCredentialError(
+                    f"managed identity token request failed: {type(exc).__name__}"
+                ) from exc
             self._token = token.token
             self._expires_at = float(getattr(token, "expires_on", now + 300))
         return {"Authorization": f"Bearer {self._token}"}
@@ -231,7 +276,11 @@ class FoundryNarrativeClient:
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
         self.settings = settings
-        self._provider = provider if provider is not None else self._default_provider(settings)
+        self._provider = (
+            provider
+            if provider is not None
+            else self._default_provider(settings)
+        )
         self._http_client = http_client
         self._state = STATE_CONFIGURED_UNVERIFIED
         self._remaining_calls = max(0, int(settings.call_budget))
@@ -242,7 +291,9 @@ class FoundryNarrativeClient:
         self._rejections = 0
 
     @staticmethod
-    def _default_provider(settings: FoundrySettings) -> FoundryCredentialProvider:
+    def _default_provider(
+        settings: FoundrySettings,
+    ) -> FoundryCredentialProvider:
         if settings.auth_mode == AUTH_MANAGED_IDENTITY:
             return ManagedIdentityCredentialProvider(scope=settings.scope)
         return ApiKeyCredentialProvider(settings.api_key)
@@ -262,12 +313,18 @@ class FoundryNarrativeClient:
 
     @property
     def counters(self) -> dict[str, int]:
-        return {"attempted": self._attempted, "succeeded": self._succeeded,
-                "fallbacks": self._fallbacks, "rejections": self._rejections}
+        return {
+            "attempted": self._attempted,
+            "succeeded": self._succeeded,
+            "fallbacks": self._fallbacks,
+            "rejections": self._rejections,
+        }
 
     # ------------------------------------------------------------ public API
 
-    async def rewrite(self, item: PersonalizedInsight) -> tuple[PersonalizedInsight, str | None]:
+    async def rewrite(
+        self, item: PersonalizedInsight
+    ) -> tuple[PersonalizedInsight, str | None]:
         if _IN_REWRITE.get():
             self._fallbacks += 1
             self._state = STATE_DEGRADED_FALLBACK
@@ -284,7 +341,9 @@ class FoundryNarrativeClient:
             _IN_REWRITE.reset(token)
             self._active_requests -= 1
 
-    async def rewrite_many(self, items: list[PersonalizedInsight]) -> tuple[list[PersonalizedInsight], list[str]]:
+    async def rewrite_many(
+        self, items: list[PersonalizedInsight]
+    ) -> tuple[list[PersonalizedInsight], list[str]]:
         """Rewrite several insights with bounded concurrency.
 
         Every failure degrades to the original deterministic output; the order
@@ -295,14 +354,20 @@ class FoundryNarrativeClient:
         if _IN_REWRITE.get():
             self._fallbacks += len(items)
             self._state = STATE_DEGRADED_FALLBACK
-            return list(items), ["Foundry fallback: recursive-call-blocked"] * len(items)
+            return list(items), [
+                "Foundry fallback: recursive-call-blocked"
+            ] * len(items)
         semaphore = asyncio.Semaphore(max(1, self.settings.max_concurrency))
 
-        async def guarded(item: PersonalizedInsight) -> tuple[PersonalizedInsight, str | None]:
+        async def guarded(
+            item: PersonalizedInsight,
+        ) -> tuple[PersonalizedInsight, str | None]:
             async with semaphore:
                 return await self.rewrite(item)
 
-        results = await asyncio.gather(*(guarded(item) for item in items), return_exceptions=True)
+        results = await asyncio.gather(
+            *(guarded(item) for item in items), return_exceptions=True
+        )
         outputs: list[PersonalizedInsight] = []
         warnings: list[str] = []
         for item, result in zip(items, results, strict=True):
@@ -320,24 +385,35 @@ class FoundryNarrativeClient:
 
     # -------------------------------------------------------------- internals
 
-    async def _rewrite_one(self, item: PersonalizedInsight) -> tuple[PersonalizedInsight, str | None]:
+    async def _rewrite_one(
+        self, item: PersonalizedInsight
+    ) -> tuple[PersonalizedInsight, str | None]:
         if self._remaining_calls <= 0:
             self._fallbacks += 1
             self._state = STATE_DEGRADED_FALLBACK
             return item, "Foundry fallback: call-budget-exhausted"
 
-        url = (f"{self.settings.endpoint}/openai/deployments/{self.settings.deployment}"
-               f"/chat/completions?api-version={self.settings.api_version}")
+        url = (
+            f"{self.settings.endpoint}/openai/deployments/{self.settings.deployment}"
+            f"/chat/completions?api-version={self.settings.api_version}"
+        )
         payload = {
             "messages": [
-                {"role": "system", "content": "You are a grounded football broadcast copy editor."},
+                {
+                    "role": "system",
+                    "content": "You are a grounded football broadcast copy editor.",
+                },
                 {"role": "user", "content": self._prompt(item)},
             ],
             "temperature": 0.1,
             "max_tokens": MAX_OUTPUT_TOKENS,
             "response_format": {"type": "json_object"},
         }
-        payload_bytes = len(json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+        payload_bytes = len(
+            json.dumps(
+                payload, ensure_ascii=False, separators=(",", ":")
+            ).encode("utf-8")
+        )
         if payload_bytes > MAX_PROMPT_PAYLOAD_BYTES:
             self._fallbacks += 1
             self._state = STATE_DEGRADED_FALLBACK
@@ -368,14 +444,26 @@ class FoundryNarrativeClient:
         self._state = STATE_VERIFIED
         return self._apply(item, rewrite), None
 
-    async def _post(self, url: str, headers: dict[str, str], payload: dict[str, Any]) -> str:
+    async def _post(
+        self, url: str, headers: dict[str, str], payload: dict[str, Any]
+    ) -> str:
         if self._http_client is not None:
-            response = await self._http_client.post(url, headers=headers, json=payload,
-                                                   timeout=self.settings.timeout_seconds)
+            response = await self._http_client.post(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=self.settings.timeout_seconds,
+            )
         else:
-            async with httpx.AsyncClient(timeout=self.settings.timeout_seconds) as owned:
-                response = await owned.post(url, headers=headers, json=payload,
-                                           timeout=self.settings.timeout_seconds)
+            async with httpx.AsyncClient(
+                timeout=self.settings.timeout_seconds
+            ) as owned:
+                response = await owned.post(
+                    url,
+                    headers=headers,
+                    json=payload,
+                    timeout=self.settings.timeout_seconds,
+                )
         response.raise_for_status()
         data = response.json()
         return data["choices"][0]["message"]["content"]
@@ -409,7 +497,9 @@ class FoundryNarrativeClient:
         return _NUMBER_RE.findall(text)
 
     @classmethod
-    def _validate(cls, item: PersonalizedInsight, rewrite: dict[str, Any]) -> None:
+    def _validate(
+        cls, item: PersonalizedInsight, rewrite: dict[str, Any]
+    ) -> None:
         """Reject any response that is not a safe rewrite of the source text."""
         if set(rewrite) != {"title", "body", "overlay_text"}:
             raise FoundryRewriteRejected("unexpected-keys")
@@ -425,7 +515,9 @@ class FoundryNarrativeClient:
             raise FoundryRewriteRejected("oversized-output")
 
         source_text = f"{item.title}\n{item.body}\n{item.overlay_text}"
-        candidate_text = f"{rewrite['title']}\n{rewrite['body']}\n{rewrite['overlay_text']}"
+        candidate_text = (
+            f"{rewrite['title']}\n{rewrite['body']}\n{rewrite['overlay_text']}"
+        )
 
         cls._reject_markup(candidate_text)
         cls._reject_unsupported_identifiers(source_text, candidate_text)
@@ -438,7 +530,11 @@ class FoundryNarrativeClient:
         if _MARKUP_RE.search(text) or _EVENT_HANDLER_RE.search(text):
             raise FoundryRewriteRejected("markup-output")
         lowered = text.lower()
-        if "javascript:" in lowered or "</script" in lowered or "<script" in lowered:
+        if (
+            "javascript:" in lowered
+            or "</script" in lowered
+            or "<script" in lowered
+        ):
             raise FoundryRewriteRejected("markup-output")
 
     @staticmethod
@@ -448,14 +544,19 @@ class FoundryNarrativeClient:
         candidate_numbers = FoundryNarrativeClient._numbers(candidate_text)
         position = 0
         for number in candidate_numbers:
-            while position < len(source_numbers) and source_numbers[position] != number:
+            while (
+                position < len(source_numbers)
+                and source_numbers[position] != number
+            ):
                 position += 1
             if position >= len(source_numbers):
                 raise FoundryRewriteRejected("unsupported-number")
             position += 1
 
     @staticmethod
-    def _reject_unsupported_identifiers(source_text: str, candidate_text: str) -> None:
+    def _reject_unsupported_identifiers(
+        source_text: str, candidate_text: str
+    ) -> None:
         if _UUID_RE.search(candidate_text):
             raise FoundryRewriteRejected("unsupported-identifier")
         for pattern in (_TEAM_LIKE_RE, _PLAYER_LIKE_RE):
@@ -464,14 +565,21 @@ class FoundryNarrativeClient:
                     raise FoundryRewriteRejected("unsupported-identifier")
 
     @staticmethod
-    def _reject_unsupported_names(source_text: str, candidate_text: str) -> None:
+    def _reject_unsupported_names(
+        source_text: str, candidate_text: str
+    ) -> None:
         lowered_source = source_text.lower()
         for first, second in _PROPER_NAME_RE.findall(candidate_text):
-            if first.lower() not in lowered_source and second.lower() not in lowered_source:
+            if (
+                first.lower() not in lowered_source
+                and second.lower() not in lowered_source
+            ):
                 raise FoundryRewriteRejected("unsupported-name")
 
     @staticmethod
-    def _reject_unsupported_causality(source_text: str, candidate_text: str) -> None:
+    def _reject_unsupported_causality(
+        source_text: str, candidate_text: str
+    ) -> None:
         lowered_source = source_text.lower()
         lowered_candidate = candidate_text.lower()
         for phrase in _CAUSAL_PHRASES:
@@ -479,7 +587,9 @@ class FoundryNarrativeClient:
                 raise FoundryRewriteRejected("unsupported-causal-claim")
 
     @staticmethod
-    def _apply(item: PersonalizedInsight, rewrite: dict[str, Any]) -> PersonalizedInsight:
+    def _apply(
+        item: PersonalizedInsight, rewrite: dict[str, Any]
+    ) -> PersonalizedInsight:
         """Rebuild the insight so pydantic revalidates the rewritten fields."""
         data = item.model_dump(mode="json")
         data.update(rewrite)

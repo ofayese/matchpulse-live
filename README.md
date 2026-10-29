@@ -17,21 +17,31 @@ match feeds or player data.
 English, Spanish, and French narratives. The specialized processing stages
 are deterministic Python components, not autonomous model-driven agents.
 
-**Approved demo:** a human-approved local candidate is not uploaded. The
-public video link is intentionally a placeholder: `<VIDEO_URL>` (add a URL
-only after upload is authorized; voice-asset rights remain unresolved).
+## Submission demo
+
+- **Project:** MatchPulse Live
+- **Demo video:** [Watch the 115-second MatchPulse Live demo](https://www.youtube.com/watch?v=O5gHkl_UFHc)
+- **Challenge project:** [Inside the Game project 127196](https://innovationstudio.microsoft.com/hackathons/insidethegamedeveloperhackathon/project/127196)
+- **Data:** Synthetic football events and fictional teams
+- **Hosting:** Azure Container Apps
+- **Demonstrated analysis mode:** Deterministic fallback
+- **Foundry runtime in the submitted deployment:** Off
+- **Model calls in the demonstrated workflow:** Zero
+- **Final narration:** ElevenLabs stock voice Lily, generated during an active paid Starter subscription
+- **Voice cloning:** Not used
+
+MatchPulse Live turns one accepted-event lineage into explainable fan,
+analyst, and broadcaster experiences in English, Spanish, and French.
+
+The Innovation Studio project is saved and listed; portal video processing
+is under organizer review. The verified YouTube demo remains available by
+URL.
 
 **Deployment status:** the immutable candidate passed hosted validation on
-Azure Container Apps. A fresh read-only check on 2026-10-26 confirmed no
-ingress configuration and the expected immutable image digest. No Foundry
-runtime setting or model deployment was found; the recorded run made zero
-model calls. The resource group contains five MatchPulse application and
-monitoring resources plus two separately authorized Foundry development
-resources. The Foundry account and project are not part of the submitted
-MatchPulse runtime and are not deployed by MatchPulse Bicep. Hosted-agent
-inventory was unavailable after the optional Preview returned 403; no hosted
-agent is claimed. The current checkout contains later local changes that are
-not in the deployed image.
+Azure Container Apps. The deployed ingress is disabled, Foundry runtime is
+off, and the reviewed run made zero model calls. No hosted-agent deployment
+is claimed. This describes the pinned image, not later changes in the current
+checkout.
 
 **Quick links:** [Quick start](#quick-start) ·
 [Architecture diagram](docs/ARCHITECTURE.md) ·
@@ -123,7 +133,7 @@ docker compose -f compose.challenge.yml up --build
 
 The application does not require narration tooling. The final submission narration was generated with ElevenLabs (stock voice Lily, `eleven_multilingual_v2`) during an active paid Starter subscription; no voice cloning was used and only generated audio is distributed in the video. See [`docs/ELEVENLABS_NARRATION.md`](docs/ELEVENLABS_NARRATION.md). Cloud TTS output is not byte-deterministic; the approved hashes are recorded there.
 
-A superseded local Kokoro development path is documented in [`docs/LOCAL_TTS_PROVENANCE.md`](docs/LOCAL_TTS_PROVENANCE.md) and [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md). Its voice-asset rights remain unresolved, so it is not used for the final video. FFmpeg and FFprobe must be installed separately; model and voice assets are not stored in Git.
+A superseded local Kokoro development path is documented in [`docs/LOCAL_TTS_PROVENANCE.md`](docs/LOCAL_TTS_PROVENANCE.md) and [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md). Its voice-asset rights remain unresolved, so it is not used for the final video. The active final narration uses the separately documented ElevenLabs paid commercial-license path. FFmpeg and FFprobe must be installed separately; model and voice assets are not stored in Git.
 
 The complete validation gate:
 

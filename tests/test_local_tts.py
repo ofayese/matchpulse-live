@@ -36,6 +36,38 @@ def make_wav(seconds: float = 0.5, sample: int = 900) -> bytes:
     return buffer.getvalue()
 
 
+def test_hosted_caption_layouts_keep_captions_in_safe_zones() -> None:
+    base = recorder.Image.new("RGB", (recorder.VIDEO_WIDTH, recorder.VIDEO_HEIGHT), (20, 40, 60))
+    lines = ("Readable caption", "Second line")
+    font = recorder._load_fonts()["caption_large"]
+    bounds = [recorder.ImageDraw.Draw(base).textbbox((0, 0), line, font=font) for line in lines]
+    height = sum(box[3] - box[1] for box in bounds) + 8
+    box_height = height + 36
+
+    for layout, center_y in (("opening-card", 820), ("application-safe", 1022)):
+        frame = recorder.draw_frame_overlays(
+            base,
+            cursor_xy=(100, 100),
+            elapsed_sec=12,
+            total_sec=115,
+            caption_lines=lines,
+            caption_layout=layout,
+            timecode_y=1048,
+        )
+        panel_y = center_y - (box_height // 2 if layout == "opening-card" else box_height)
+        assert frame.getpixel((200, panel_y + 4)) == (5, 16, 26)
+
+    with pytest.raises(recorder.RecordingError, match="at most two lines"):
+        recorder.draw_frame_overlays(
+            base,
+            cursor_xy=(100, 100),
+            elapsed_sec=12,
+            total_sec=115,
+            caption_lines=("one", "two", "three"),
+            caption_layout="application-safe",
+        )
+
+
 def create_adapter(tmp_path: Path, handler, *, retries: int = 2) -> LocalDockerTTS:
     return LocalDockerTTS(
         "http://127.0.0.1:8765",

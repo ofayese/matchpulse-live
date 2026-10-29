@@ -82,7 +82,9 @@ def test_demo_cooldown_is_enforced():
         assert first_run.status_code == 202
         # Wait for the run to complete to release the lock
         for _ in range(100):
-            status = client.get(f"/v1/demo/runs/{first_run.json()['run_id']}").json()
+            status = client.get(
+                f"/v1/demo/runs/{first_run.json()['run_id']}"
+            ).json()
             if status["status"] in {"completed", "failed"}:
                 break
             time.sleep(0.05)
@@ -92,7 +94,9 @@ def test_demo_cooldown_is_enforced():
         assert "cooldown" in second.json()["detail"]
 
 
-def test_demo_run_is_rejected_when_the_synthetic_only_gate_is_disabled(monkeypatch):
+def test_demo_run_is_rejected_when_the_synthetic_only_gate_is_disabled(
+    monkeypatch,
+):
     monkeypatch.setenv("CHALLENGE_SYNTHETIC_ONLY", "false")
     with _client(create_app()) as client:
         response = client.post("/v1/demo/runs", json={})
@@ -109,6 +113,7 @@ def test_demo_run_plans_are_bounded_and_deterministic():
     manager = DemoRunManager(event_cap=10)
     plan = manager.plan(seed=27)
     assert len(plan.events) <= 10
+    assert len(plan.events) > 0
     assert plan.events[0].event_type.value == "match_start"
     assert plan.events[-1].event_type.value == "match_end"
     sequences = [event.sequence for event in plan.events]

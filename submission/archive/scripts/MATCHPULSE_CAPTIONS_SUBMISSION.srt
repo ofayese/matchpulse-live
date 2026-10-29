@@ -1,0 +1,64 @@
+1
+00:00:00,000 --> 00:00:08,000
+MatchPulse Live turns seeded synthetic
+match events into evidence-aware stories.
+
+2
+00:00:08,000 --> 00:00:18,000
+Every match fact comes from a
+deterministic synthetic event stream.
+
+3
+00:00:18,000 --> 00:00:28,000
+Passes, pressure, shots, saves, and goals
+arrive through the event API.
+
+4
+00:00:28,000 --> 00:00:38,000
+Match state updates immediately as the
+synthetic scenario progresses.
+
+5
+00:00:38,000 --> 00:00:46,000
+Duplicate events are acknowledged without
+duplicating match state.
+
+6
+00:00:46,000 --> 00:00:54,000
+Out-of-order events are rejected to
+preserve a consistent timeline.
+
+7
+00:00:54,000 --> 00:01:03,000
+Fan mode makes the same evidence-backed
+moment immediate.
+
+8
+00:01:03,000 --> 00:01:12,000
+Analyst mode exposes inputs, derivation,
+and confidence.
+
+9
+00:01:12,000 --> 00:01:20,000
+Broadcaster mode compresses the insight
+for live delivery.
+
+10
+00:01:20,000 --> 00:01:27,000
+Language changes while the underlying
+facts and evidence remain stable.
+
+11
+00:01:27,000 --> 00:01:39,000
+At full time, the validated state produces
+a profile-specific recap.
+
+12
+00:01:39,000 --> 00:01:48,000
+Invalid optional output falls back to
+safe, deterministic copy.
+
+13
+00:01:48,000 --> 00:01:55,000
+One match. Multiple audiences.
+Traceable stories.

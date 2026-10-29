@@ -37,15 +37,22 @@ class DetailLevel(str, Enum):
 
 
 class MatchEvent(StrictModel):
-    event_id: str = Field(default_factory=lambda: str(uuid4()), min_length=8, max_length=80)
-    match_id: str = Field(min_length=3, max_length=80, pattern=r"^[A-Za-z0-9._:-]+$")
+    event_id: str = Field(
+        default_factory=lambda: str(uuid4()), min_length=8, max_length=80
+    )
+    match_id: str = Field(
+        min_length=3, max_length=80, pattern=r"^[A-Za-z0-9._:-]+$"
+    )
     sequence: int = Field(ge=0)
     clock_ms: int = Field(ge=0, le=8_000_000)
     event_type: EventType
     team_id: str | None = Field(default=None, max_length=80)
     player_id: str | None = Field(default=None, max_length=80)
     target_player_id: str | None = Field(default=None, max_length=80)
-    outcome: Literal["success", "failure", "on_target", "off_target", "blocked"] | None = None
+    outcome: (
+        Literal["success", "failure", "on_target", "off_target", "blocked"]
+        | None
+    ) = None
     x: float | None = Field(default=None, ge=0, le=100)
     y: float | None = Field(default=None, ge=0, le=100)
     end_x: float | None = Field(default=None, ge=0, le=100)
@@ -57,21 +64,36 @@ class MatchEvent(StrictModel):
 
     @model_validator(mode="after")
     def event_requirements(self) -> MatchEvent:
-        if self.event_type in {EventType.PASS, EventType.SHOT, EventType.GOAL, EventType.TACKLE}:
-            if not self.team_id or not self.player_id:
-                raise ValueError("team_id and player_id are required for this event type")
-        if self.event_type == EventType.PASS and None in (self.x, self.y, self.end_x, self.end_y):
+        if self.event_type in {
+            EventType.PASS,
+            EventType.SHOT,
+            EventType.GOAL,
+            EventType.TACKLE,
+        } and (not self.team_id or not self.player_id):
+            raise ValueError(
+                "team_id and player_id are required for this event type"
+            )
+        if self.event_type == EventType.PASS and None in (
+            self.x,
+            self.y,
+            self.end_x,
+            self.end_y,
+        ):
             raise ValueError("pass events require x, y, end_x, and end_y")
         return self
 
 
 class AudienceProfile(StrictModel):
-    profile_id: str = Field(min_length=2, max_length=80, pattern=r"^[A-Za-z0-9._:-]+$")
+    profile_id: str = Field(
+        min_length=2, max_length=80, pattern=r"^[A-Za-z0-9._:-]+$"
+    )
     persona: Persona
     locale: Literal["en", "es", "fr"] = "en"
     favorite_club: str | None = Field(default=None, max_length=80)
     favorite_player: str | None = Field(default=None, max_length=80)
-    metric_interests: list[Literal["passing", "shooting", "pressing", "possession", "defending"]] = Field(default_factory=list, max_length=5)
+    metric_interests: list[
+        Literal["passing", "shooting", "pressing", "possession", "defending"]
+    ] = Field(default_factory=list, max_length=5)
     detail: DetailLevel = DetailLevel.STANDARD
     captions: bool = True
     high_contrast: bool = False
@@ -89,7 +111,15 @@ class Insight(StrictModel):
     match_id: str
     sequence: int
     clock_ms: int
-    kind: Literal["goal", "shot_speed", "pass_quality", "pressing_surge", "possession_swing", "tackle", "recap"]
+    kind: Literal[
+        "goal",
+        "shot_speed",
+        "pass_quality",
+        "pressing_surge",
+        "possession_swing",
+        "tackle",
+        "recap",
+    ]
     severity: Literal["info", "notable", "major"]
     team_id: str | None = None
     player_id: str | None = None

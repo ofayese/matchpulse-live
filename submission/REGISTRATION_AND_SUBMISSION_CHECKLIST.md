@@ -1,8 +1,17 @@
-# Registration and submission checklist
+# Historical registration and submission checklist
 
-## Current readiness status — October 23, 2026
+This is a historical planning record, not an active execution checklist. Its
+dated tasks include actions that are now stale, including creating a Foundry
+deployment and enabling public access. Do not execute them as current
+instructions. The existing Azure Container Apps deployment was validated and
+its public ingress was disabled after validation; Foundry was off with zero model calls in
+the deployed configuration. The approved video remains local and unuploaded;
+the challenge portal remains unsubmitted. The separate voice-asset license
+and the required upload destination are unresolved.
 
-The registration confirmation supplied for this task is timestamped October 20, 2026 at 1:29 PM Eastern (the client timezone), before the 3:00 PM Eastern equivalent of the official 12:00 PM Pacific registration deadline. Registration is confirmed for this gate. Azure deployment remains blocked because no approved cloud scope, budget ceiling, or explicit cost authorization was provided. The portal has not been submitted.
+## Historical readiness snapshot — October 26, 2026
+
+The registration confirmation supplied for this task is timestamped October 20, 2026 at 1:29 PM Eastern (the client timezone), before the 3:00 PM Eastern equivalent of the official 12:00 PM Pacific registration deadline. Registration is confirmed for this gate. Azure Container Apps deployment succeeded and was validated live (container app `<CONTAINER_APP_NAME>` in resource group `<RESOURCE_GROUP>`, active revision `<AZURE_REVISION>`); public ingress was disabled after validation to enforce cost containment. A fresh ingress readback was unavailable during finalization. In the deployed configuration, Microsoft Foundry runtime was disabled and model call count was zero. Final video is approved locally (`matchpulse-submission-hosted-elevenlabs-lily-v1-candidate.mp4`, SHA-256: `f06bb7dfe48b48c642044a6b09cd29cf857edb6f1bed6a95be90a1718ec2b786`, duration 115.0s, local Dockerized Kokoro-82M `bf_emma` narration) with browser TTS completely removed; video is not yet uploaded (`VIDEO_UPLOADED=NO`). The challenge portal has not been submitted (`CHALLENGE_SUBMITTED=NO`).
 
 ## Tuesday, October 20, 2026 - registration
 
@@ -35,13 +44,17 @@ Official registration closes at **12:00 PM Pacific / 3:00 PM Eastern (Washington
 - [ ] Confirm the final repository license and ownership.
 - [ ] Record the demo from the exact public commit.
 - [ ] Keep the final video <= 1:55 and add English captions.
-- [ ] Upload to YouTube, Vimeo, Facebook Video, or Youku with a public URL.
+- [ ] Upload to the challenge-required destination after it is identified and its current requirements are verified.
 - [ ] Add final public repository, demo, and video URLs to the project description/testing instructions.
 - [ ] Run `python scripts/preflight.py` and archive the output.
 
 ## Tuesday, October 27 - submit
 
-The official submission period ends at **11:59 PM Pacific**, which is **2:59 AM Eastern on October 28**. Use an internal deadline of **11:59 PM Eastern on October 27** so the project is visibly submitted on the user's requested date.
+The official challenge deadline supplied for this task is **October 27, 2026
+at 11:59 PM Pacific Time**. The internal completion target is **tomorrow
+afternoon (October 27, Pacific Time)**; this earlier target does not replace
+the official deadline. Verify the live portal status before any authorized
+submission.
 
 - [ ] Complete every required field on the Projects page.
 - [ ] Paste the pitch and description; name Microsoft/Azure technologies actually demonstrated.
@@ -56,7 +69,7 @@ The official submission period ends at **11:59 PM Pacific**, which is **2:59 AM 
 
 ## Final category honesty check
 
-- Claim **Best Multi-Agent System**: yes, if the shown build matches this code.
-- Claim **Best Azure Cloud Native Integration**: only after the Azure deployment and telemetry are live.
-- Claim **Best Use of Microsoft Foundry**: only after a real Foundry call is shown or evidenced.
-- Claim **Best Enterprise Solution**: describe current controls and disclose in-memory/MVP limits.
+- Do not claim **Best Multi-Agent System** based on this implementation: the processing stages are deterministic components, not an autonomous or multi-agent system.
+- Do not claim **Best Use of Microsoft Foundry** from the adapter alone; the validated deployment had Foundry off and zero model calls.
+- If selecting **Best Azure Cloud Native Integration** or **Best Enterprise Solution**, use only the evidence that the immutable candidate passed hosted validation and disclose disabled ingress, in-memory state, and the telemetry limits.
+- Confirm the exact category options and wording in the live portal; these prize labels are not a substitute for portal verification.

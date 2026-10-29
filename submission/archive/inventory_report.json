@@ -1,0 +1,720 @@
+{
+  "generated_at_utc": "2026-10-26T00:19:09.096953+00:00",
+  "summary": {
+    "total_files": 31,
+    "total_bytes": 128492471,
+    "active_video": "matchpulse-submission-hosted-kokoro-conversational-v2-candidate.mp4",
+    "active_video_sha256": "b89c016d8d0c790ae42b3a761d6ec7f709cfa988159649c4cf0e07eb8906dcbf",
+    "counts_by_classification": {
+      "FINAL_DOCUMENTATION": 8,
+      "SUPERSEDED_SCRIPT": 3,
+      "APPROVED_SUPPORT_ARTIFACT": 7,
+      "SUPERSEDED_MANIFEST": 3,
+      "SUPERSEDED_AUDIO": 2,
+      "SUPERSEDED_VIDEO": 7,
+      "APPROVED_ACTIVE_VIDEO": 1
+    }
+  },
+  "inventory": [
+    {
+      "filename": "DEMO_SCRIPT_120S.md",
+      "relative_path": "submission/DEMO_SCRIPT_120S.md",
+      "current_location": "submission/DEMO_SCRIPT_120S.md",
+      "extension": ".md",
+      "byte_size": 2721,
+      "last_modified_utc": "2026-10-22T13:26:15.652311+00:00",
+      "sha256": "502fc0901c64f4d147288d56f7da0244f14790f22956631438f29dcad228b183",
+      "git_status": "tracked",
+      "git_ignore_status": false,
+      "is_tracked": true,
+      "referenced_by_docs": [],
+      "classification": "FINAL_DOCUMENTATION",
+      "proposed_destination": "submission/DEMO_SCRIPT_120S.md"
+    },
+    {
+      "filename": "IP_DATA_AND_SAFETY_REVIEW.md",
+      "relative_path": "submission/IP_DATA_AND_SAFETY_REVIEW.md",
+      "current_location": "submission/IP_DATA_AND_SAFETY_REVIEW.md",
+      "extension": ".md",
+      "byte_size": 1799,
+      "last_modified_utc": "2026-10-23T00:24:51.297707+00:00",
+      "sha256": "695bcd7f927b542db442e5bd3b3b9b24c6ad027c03e0321177a0ed40a6d50122",
+      "git_status": "tracked",
+      "git_ignore_status": false,
+      "is_tracked": true,
+      "referenced_by_docs": [],
+      "classification": "FINAL_DOCUMENTATION",
+      "proposed_destination": "submission/IP_DATA_AND_SAFETY_REVIEW.md"
+    },
+    {
+      "filename": "MATCHPULSE_CAPTIONS_SUBMISSION.srt",
+      "relative_path": "submission/MATCHPULSE_CAPTIONS_SUBMISSION.srt",
+      "current_location": "submission/archive/scripts/MATCHPULSE_CAPTIONS_SUBMISSION.srt",
+      "extension": ".srt",
+      "byte_size": 1351,
+      "last_modified_utc": "2026-10-24T04:57:28.032090+00:00",
+      "sha256": "b37b252624358e2041d57d23e30b144068faa6eb7035e840c40d576f5fba90e4",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [
+        "submission/MATCHPULSE_VIDEO_VERIFICATION.txt"
+      ],
+      "classification": "SUPERSEDED_SCRIPT",
+      "proposed_destination": "submission/archive/scripts/MATCHPULSE_CAPTIONS_SUBMISSION.srt"
+    },
+    {
+      "filename": "MATCHPULSE_CAPTIONS_SUBMISSION_HOSTED.srt",
+      "relative_path": "submission/MATCHPULSE_CAPTIONS_SUBMISSION_HOSTED.srt",
+      "current_location": "submission/final-support/MATCHPULSE_CAPTIONS_SUBMISSION_HOSTED.srt",
+      "extension": ".srt",
+      "byte_size": 1411,
+      "last_modified_utc": "2026-10-25T17:26:59.901973+00:00",
+      "sha256": "2325d5d4da6fc59f8b6a5abdecd3d954eceb5ea38bf6eb5cfd62464f96d41da9",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "APPROVED_SUPPORT_ARTIFACT",
+      "proposed_destination": "submission/final-support/MATCHPULSE_CAPTIONS_SUBMISSION_HOSTED.srt"
+    },
+    {
+      "filename": "MATCHPULSE_CAPTIONS_TECHNICAL.srt",
+      "relative_path": "submission/MATCHPULSE_CAPTIONS_TECHNICAL.srt",
+      "current_location": "submission/archive/scripts/MATCHPULSE_CAPTIONS_TECHNICAL.srt",
+      "extension": ".srt",
+      "byte_size": 2982,
+      "last_modified_utc": "2026-10-24T04:57:26.100004+00:00",
+      "sha256": "441beccfbe5a1e87ee3786f601d8251757820b484597561a4c389742f27de2cd",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [
+        "submission/MATCHPULSE_VIDEO_VERIFICATION.txt"
+      ],
+      "classification": "SUPERSEDED_SCRIPT",
+      "proposed_destination": "submission/archive/scripts/MATCHPULSE_CAPTIONS_TECHNICAL.srt"
+    },
+    {
+      "filename": "MATCHPULSE_NARRATION_CONVERSATIONAL.json",
+      "relative_path": "submission/MATCHPULSE_NARRATION_CONVERSATIONAL.json",
+      "current_location": "submission/archive/scripts/MATCHPULSE_NARRATION_CONVERSATIONAL.json",
+      "extension": ".json",
+      "byte_size": 8532,
+      "last_modified_utc": "2026-10-25T21:38:25.187967+00:00",
+      "sha256": "340a1b5614096b0f8d43da0aec02017d8f1c0c3c41804c4d47d806026254dc81",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_SCRIPT",
+      "proposed_destination": "submission/archive/scripts/MATCHPULSE_NARRATION_CONVERSATIONAL.json"
+    },
+    {
+      "filename": "MATCHPULSE_NARRATION_CONVERSATIONAL_V2.json",
+      "relative_path": "submission/MATCHPULSE_NARRATION_CONVERSATIONAL_V2.json",
+      "current_location": "submission/final-support/MATCHPULSE_NARRATION_CONVERSATIONAL_V2.json",
+      "extension": ".json",
+      "byte_size": 14839,
+      "last_modified_utc": "2026-10-25T22:56:11.403826+00:00",
+      "sha256": "9930d8b267fc881f48d43537d1b3a999e003e9024e27c04b316a9fc3c7d3c3e2",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "APPROVED_SUPPORT_ARTIFACT",
+      "proposed_destination": "submission/final-support/MATCHPULSE_NARRATION_CONVERSATIONAL_V2.json"
+    },
+    {
+      "filename": "MATCHPULSE_PLAYWRIGHT_RECORDING_PLAN.md",
+      "relative_path": "submission/MATCHPULSE_PLAYWRIGHT_RECORDING_PLAN.md",
+      "current_location": "submission/final-support/MATCHPULSE_PLAYWRIGHT_RECORDING_PLAN.md",
+      "extension": ".md",
+      "byte_size": 16784,
+      "last_modified_utc": "2026-10-25T20:00:22.970483+00:00",
+      "sha256": "441fd062651ec8ca1caa0a8eb21dd82389206205e9ee40aac74da4dbaec22ab5",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "APPROVED_SUPPORT_ARTIFACT",
+      "proposed_destination": "submission/final-support/MATCHPULSE_PLAYWRIGHT_RECORDING_PLAN.md"
+    },
+    {
+      "filename": "MATCHPULSE_SHOT_LISTS.md",
+      "relative_path": "submission/MATCHPULSE_SHOT_LISTS.md",
+      "current_location": "submission/final-support/MATCHPULSE_SHOT_LISTS.md",
+      "extension": ".md",
+      "byte_size": 13966,
+      "last_modified_utc": "2026-10-25T17:26:59.901973+00:00",
+      "sha256": "ab778d5a7a15e572c2a60adf87becbeabab5f901cc9b80a5b96d35a6bc1854c5",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "APPROVED_SUPPORT_ARTIFACT",
+      "proposed_destination": "submission/final-support/MATCHPULSE_SHOT_LISTS.md"
+    },
+    {
+      "filename": "MATCHPULSE_VIDEO_MANIFEST.json",
+      "relative_path": "submission/MATCHPULSE_VIDEO_MANIFEST.json",
+      "current_location": "submission/archive/manifests/MATCHPULSE_VIDEO_MANIFEST.json",
+      "extension": ".json",
+      "byte_size": 2611,
+      "last_modified_utc": "2026-10-24T06:26:03.667223+00:00",
+      "sha256": "76d8766bce444848e3b6bedfd4b7f7876545dcb4cfcc35bcad5712661c675c94",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_MANIFEST",
+      "proposed_destination": "submission/archive/manifests/MATCHPULSE_VIDEO_MANIFEST.json"
+    },
+    {
+      "filename": "MATCHPULSE_VIDEO_SCRIPTS.md",
+      "relative_path": "submission/MATCHPULSE_VIDEO_SCRIPTS.md",
+      "current_location": "submission/final-support/MATCHPULSE_VIDEO_SCRIPTS.md",
+      "extension": ".md",
+      "byte_size": 12849,
+      "last_modified_utc": "2026-10-25T17:26:59.901973+00:00",
+      "sha256": "dda877cedd571fdab3c549cbe8d7f6e8e475b0dcc17c26ab5b7e716c3fe34130",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "APPROVED_SUPPORT_ARTIFACT",
+      "proposed_destination": "submission/final-support/MATCHPULSE_VIDEO_SCRIPTS.md"
+    },
+    {
+      "filename": "MATCHPULSE_VIDEO_VERIFICATION.txt",
+      "relative_path": "submission/MATCHPULSE_VIDEO_VERIFICATION.txt",
+      "current_location": "submission/MATCHPULSE_VIDEO_VERIFICATION.txt",
+      "extension": ".txt",
+      "byte_size": 11401,
+      "last_modified_utc": "2026-10-24T15:29:38.523119+00:00",
+      "sha256": "7e15cf80f92057f36e40945dfb4bfeb403709ec34e5ecd89784c1c787413f528",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "FINAL_DOCUMENTATION",
+      "proposed_destination": "submission/MATCHPULSE_VIDEO_VERIFICATION.txt"
+    },
+    {
+      "filename": "PITCH.md",
+      "relative_path": "submission/PITCH.md",
+      "current_location": "submission/PITCH.md",
+      "extension": ".md",
+      "byte_size": 352,
+      "last_modified_utc": "2026-10-23T00:23:57.240196+00:00",
+      "sha256": "f161e71e3a4e78b2c892079dd1a46cc62226bb29ef2afd79536b512c2f529e36",
+      "git_status": "tracked",
+      "git_ignore_status": false,
+      "is_tracked": true,
+      "referenced_by_docs": [
+        "submission/REGISTRATION_AND_SUBMISSION_CHECKLIST.md"
+      ],
+      "classification": "FINAL_DOCUMENTATION",
+      "proposed_destination": "submission/PITCH.md"
+    },
+    {
+      "filename": "PORTAL_SUBMISSION_WORKSHEET.md",
+      "relative_path": "submission/PORTAL_SUBMISSION_WORKSHEET.md",
+      "current_location": "submission/PORTAL_SUBMISSION_WORKSHEET.md",
+      "extension": ".md",
+      "byte_size": 3819,
+      "last_modified_utc": "2026-10-24T15:30:31.450924+00:00",
+      "sha256": "427ec6a0222acd25e729ec528fbc76a26aab8b8f61b95ed69641fa6cac1263e8",
+      "git_status": "tracked",
+      "git_ignore_status": false,
+      "is_tracked": true,
+      "referenced_by_docs": [],
+      "classification": "FINAL_DOCUMENTATION",
+      "proposed_destination": "submission/PORTAL_SUBMISSION_WORKSHEET.md"
+    },
+    {
+      "filename": "PROJECT_DESCRIPTION.md",
+      "relative_path": "submission/PROJECT_DESCRIPTION.md",
+      "current_location": "submission/PROJECT_DESCRIPTION.md",
+      "extension": ".md",
+      "byte_size": 1746,
+      "last_modified_utc": "2026-10-23T00:23:51.572389+00:00",
+      "sha256": "4748bade9265da01153f2f0aba5b2f357e6cc83ba453f154fbf416f397724529",
+      "git_status": "tracked",
+      "git_ignore_status": false,
+      "is_tracked": true,
+      "referenced_by_docs": [],
+      "classification": "FINAL_DOCUMENTATION",
+      "proposed_destination": "submission/PROJECT_DESCRIPTION.md"
+    },
+    {
+      "filename": "REGISTRATION_AND_SUBMISSION_CHECKLIST.md",
+      "relative_path": "submission/REGISTRATION_AND_SUBMISSION_CHECKLIST.md",
+      "current_location": "submission/REGISTRATION_AND_SUBMISSION_CHECKLIST.md",
+      "extension": ".md",
+      "byte_size": 3858,
+      "last_modified_utc": "2026-10-23T00:27:17.680596+00:00",
+      "sha256": "f39e81f6339222d79bd9d821ad0f8911b3ae83f239207f4d7c81e9edabc958f4",
+      "git_status": "tracked",
+      "git_ignore_status": false,
+      "is_tracked": true,
+      "referenced_by_docs": [],
+      "classification": "FINAL_DOCUMENTATION",
+      "proposed_destination": "submission/REGISTRATION_AND_SUBMISSION_CHECKLIST.md"
+    },
+    {
+      "filename": "TESTING_INSTRUCTIONS.md",
+      "relative_path": "submission/TESTING_INSTRUCTIONS.md",
+      "current_location": "submission/TESTING_INSTRUCTIONS.md",
+      "extension": ".md",
+      "byte_size": 2775,
+      "last_modified_utc": "2026-10-23T00:26:47.987489+00:00",
+      "sha256": "6ae255769bcecf957f4a5c11346febf72d584d896e7589d8a31c7fbc2f08b0fd",
+      "git_status": "tracked",
+      "git_ignore_status": false,
+      "is_tracked": true,
+      "referenced_by_docs": [],
+      "classification": "FINAL_DOCUMENTATION",
+      "proposed_destination": "submission/TESTING_INSTRUCTIONS.md"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.manifest.json",
+      "relative_path": "submission/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.manifest.json",
+      "current_location": "submission/final-support/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.manifest.json",
+      "extension": ".json",
+      "byte_size": 25473,
+      "last_modified_utc": "2026-10-25T23:00:08.866694+00:00",
+      "sha256": "894c56c79feec4f52ab5badb826d28abed657ddd3dfd37aaaf8bcebd39a38aff",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "APPROVED_SUPPORT_ARTIFACT",
+      "proposed_destination": "submission/final-support/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.manifest.json"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.wav",
+      "relative_path": "submission/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.wav",
+      "current_location": "submission/final-support/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.wav",
+      "extension": ".wav",
+      "byte_size": 22080078,
+      "last_modified_utc": "2026-10-25T23:00:08.864145+00:00",
+      "sha256": "b361d34127b5806310ba27fb80ce048947f168c659c7c331739e6726a003d2c6",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "APPROVED_SUPPORT_ARTIFACT",
+      "proposed_destination": "submission/final-support/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.wav"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma-conversational.manifest.json",
+      "relative_path": "submission/matchpulse-hosted-narration-kokoro-bf-emma-conversational.manifest.json",
+      "current_location": "submission/archive/manifests/matchpulse-hosted-narration-kokoro-bf-emma-conversational.manifest.json",
+      "extension": ".json",
+      "byte_size": 9166,
+      "last_modified_utc": "2026-10-25T21:42:22.300688+00:00",
+      "sha256": "ee2480f616d43882f6ac18741802b53e5887c7e0a1f65f180a55568ce0b7caad",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_MANIFEST",
+      "proposed_destination": "submission/archive/manifests/matchpulse-hosted-narration-kokoro-bf-emma-conversational.manifest.json"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma-conversational.wav",
+      "relative_path": "submission/matchpulse-hosted-narration-kokoro-bf-emma-conversational.wav",
+      "current_location": "submission/archive/audio/matchpulse-hosted-narration-kokoro-bf-emma-conversational.wav",
+      "extension": ".wav",
+      "byte_size": 22080078,
+      "last_modified_utc": "2026-10-25T21:42:22.300146+00:00",
+      "sha256": "76ba0ec7b5149f72a19dce216e6b939d8c14929e078015e830e4cd7cdff27f49",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_AUDIO",
+      "proposed_destination": "submission/archive/audio/matchpulse-hosted-narration-kokoro-bf-emma-conversational.wav"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma.manifest.json",
+      "relative_path": "submission/matchpulse-hosted-narration-kokoro-bf-emma.manifest.json",
+      "current_location": "submission/archive/manifests/matchpulse-hosted-narration-kokoro-bf-emma.manifest.json",
+      "extension": ".json",
+      "byte_size": 5475,
+      "last_modified_utc": "2026-10-25T20:30:31.784422+00:00",
+      "sha256": "6bf060106ddde810da8cd9308ff92b6efde7af543489558c5dd5d242c8423110",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_MANIFEST",
+      "proposed_destination": "submission/archive/manifests/matchpulse-hosted-narration-kokoro-bf-emma.manifest.json"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma.wav",
+      "relative_path": "submission/matchpulse-hosted-narration-kokoro-bf-emma.wav",
+      "current_location": "submission/archive/audio/matchpulse-hosted-narration-kokoro-bf-emma.wav",
+      "extension": ".wav",
+      "byte_size": 22080044,
+      "last_modified_utc": "2026-10-25T20:30:31.779517+00:00",
+      "sha256": "5a6904ea992b460e60180c8e5c29b9bd2d6aec5240befbe6553e33bebd143297",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_AUDIO",
+      "proposed_destination": "submission/archive/audio/matchpulse-hosted-narration-kokoro-bf-emma.wav"
+    },
+    {
+      "filename": "matchpulse-submission-demo-captioned.mp4",
+      "relative_path": "submission/matchpulse-submission-demo-captioned.mp4",
+      "current_location": "submission/archive/videos/matchpulse-submission-demo-captioned.mp4",
+      "extension": ".mp4",
+      "byte_size": 6117673,
+      "last_modified_utc": "2026-10-24T06:21:23.008413+00:00",
+      "sha256": "4962982b9e9c84352f564ebdc8ff86d8c0ad6fe975590df857e8daecf0351d4b",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [
+        "submission/MATCHPULSE_VIDEO_VERIFICATION.txt",
+        "submission/PORTAL_SUBMISSION_WORKSHEET.md"
+      ],
+      "classification": "SUPERSEDED_VIDEO",
+      "proposed_destination": "submission/archive/videos/matchpulse-submission-demo-captioned.mp4"
+    },
+    {
+      "filename": "matchpulse-submission-demo.mp4",
+      "relative_path": "submission/matchpulse-submission-demo.mp4",
+      "current_location": "submission/archive/videos/matchpulse-submission-demo.mp4",
+      "extension": ".mp4",
+      "byte_size": 6176897,
+      "last_modified_utc": "2026-10-24T06:15:59.499099+00:00",
+      "sha256": "379b03f12e02269bfc8ab662c2eaa8e533ec6d44c6230b3c1e3f03aee85dc633",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [
+        "submission/MATCHPULSE_VIDEO_VERIFICATION.txt"
+      ],
+      "classification": "SUPERSEDED_VIDEO",
+      "proposed_destination": "submission/archive/videos/matchpulse-submission-demo.mp4"
+    },
+    {
+      "filename": "matchpulse-submission-hosted-candidate.mp4",
+      "relative_path": "submission/matchpulse-submission-hosted-candidate.mp4",
+      "current_location": "submission/archive/videos/matchpulse-submission-hosted-candidate.mp4",
+      "extension": ".mp4",
+      "byte_size": 6085981,
+      "last_modified_utc": "2026-10-25T18:19:28.734908+00:00",
+      "sha256": "5a6faaf2bef5603f973e6774568064eb21d91dd9dd60e1f7f87f4b86da939387",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_VIDEO",
+      "proposed_destination": "submission/archive/videos/matchpulse-submission-hosted-candidate.mp4"
+    },
+    {
+      "filename": "matchpulse-submission-hosted-kokoro-candidate.mp4",
+      "relative_path": "submission/matchpulse-submission-hosted-kokoro-candidate.mp4",
+      "current_location": "submission/archive/videos/matchpulse-submission-hosted-kokoro-candidate.mp4",
+      "extension": ".mp4",
+      "byte_size": 6087897,
+      "last_modified_utc": "2026-10-25T20:30:43.956144+00:00",
+      "sha256": "3f2d195fa566b68733caa71c2fc06dce3f2213e98ff150d8aeda67f42829c6ae",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_VIDEO",
+      "proposed_destination": "submission/archive/videos/matchpulse-submission-hosted-kokoro-candidate.mp4"
+    },
+    {
+      "filename": "matchpulse-submission-hosted-kokoro-conversational-candidate.mp4",
+      "relative_path": "submission/matchpulse-submission-hosted-kokoro-conversational-candidate.mp4",
+      "current_location": "submission/archive/videos/matchpulse-submission-hosted-kokoro-conversational-candidate.mp4",
+      "extension": ".mp4",
+      "byte_size": 7272076,
+      "last_modified_utc": "2026-10-25T21:42:38.881355+00:00",
+      "sha256": "f649ac13ed16c798777c945639dac7fad6868c522f8c1c725e974a3724125f45",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "SUPERSEDED_VIDEO",
+      "proposed_destination": "submission/archive/videos/matchpulse-submission-hosted-kokoro-conversational-candidate.mp4"
+    },
+    {
+      "filename": "matchpulse-submission-hosted-kokoro-conversational-v2-candidate.mp4",
+      "relative_path": "submission/matchpulse-submission-hosted-kokoro-conversational-v2-candidate.mp4",
+      "current_location": "submission/matchpulse-submission-hosted-kokoro-conversational-v2-candidate.mp4",
+      "extension": ".mp4",
+      "byte_size": 7255648,
+      "last_modified_utc": "2026-10-25T23:00:23.600451+00:00",
+      "sha256": "b89c016d8d0c790ae42b3a761d6ec7f709cfa988159649c4cf0e07eb8906dcbf",
+      "git_status": "ignored",
+      "git_ignore_status": true,
+      "is_tracked": false,
+      "referenced_by_docs": [],
+      "classification": "APPROVED_ACTIVE_VIDEO",
+      "proposed_destination": "submission/matchpulse-submission-hosted-kokoro-conversational-v2-candidate.mp4"
+    },
+    {
+      "filename": "matchpulse-technical-demo-captioned.mp4",
+      "relative_path": "submission/matchpulse-technical-demo-captioned.mp4",
+      "current_location": "submission/archive/videos/matchpulse-technical-demo-captioned.mp4",
+      "extension": ".mp4",
+      "byte_size": 11456474,
+      "last_modified_utc": "2026-10-24T06:24:27.138225+00:00",
+      "sha256": "2f35a0db9f88a3e005c46530b09a7abed0cebd72ee569fada130609f9e09a6ab",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [
+        "submission/MATCHPULSE_VIDEO_VERIFICATION.txt",
+        "submission/PORTAL_SUBMISSION_WORKSHEET.md"
+      ],
+      "classification": "SUPERSEDED_VIDEO",
+      "proposed_destination": "submission/archive/videos/matchpulse-technical-demo-captioned.mp4"
+    },
+    {
+      "filename": "matchpulse-technical-demo.mp4",
+      "relative_path": "submission/matchpulse-technical-demo.mp4",
+      "current_location": "submission/archive/videos/matchpulse-technical-demo.mp4",
+      "extension": ".mp4",
+      "byte_size": 11655715,
+      "last_modified_utc": "2026-10-24T06:19:30.971036+00:00",
+      "sha256": "7f6eb4ac06eea00fb4a6ec77bf06dede9804b465f65cd96600a138d7d5f1230c",
+      "git_status": "untracked",
+      "git_ignore_status": false,
+      "is_tracked": false,
+      "referenced_by_docs": [
+        "submission/MATCHPULSE_VIDEO_VERIFICATION.txt"
+      ],
+      "classification": "SUPERSEDED_VIDEO",
+      "proposed_destination": "submission/archive/videos/matchpulse-technical-demo.mp4"
+    }
+  ],
+  "move_log": [
+    {
+      "filename": "DEMO_SCRIPT_120S.md",
+      "action": "retained",
+      "source": "submission/DEMO_SCRIPT_120S.md",
+      "destination": "submission/DEMO_SCRIPT_120S.md",
+      "sha256": "502fc0901c64f4d147288d56f7da0244f14790f22956631438f29dcad228b183"
+    },
+    {
+      "filename": "IP_DATA_AND_SAFETY_REVIEW.md",
+      "action": "retained",
+      "source": "submission/IP_DATA_AND_SAFETY_REVIEW.md",
+      "destination": "submission/IP_DATA_AND_SAFETY_REVIEW.md",
+      "sha256": "695bcd7f927b542db442e5bd3b3b9b24c6ad027c03e0321177a0ed40a6d50122"
+    },
+    {
+      "filename": "MATCHPULSE_CAPTIONS_SUBMISSION.srt",
+      "action": "retained",
+      "source": "submission/archive/scripts/MATCHPULSE_CAPTIONS_SUBMISSION.srt",
+      "destination": "submission/archive/scripts/MATCHPULSE_CAPTIONS_SUBMISSION.srt",
+      "sha256": "b37b252624358e2041d57d23e30b144068faa6eb7035e840c40d576f5fba90e4"
+    },
+    {
+      "filename": "MATCHPULSE_CAPTIONS_SUBMISSION_HOSTED.srt",
+      "action": "retained",
+      "source": "submission/final-support/MATCHPULSE_CAPTIONS_SUBMISSION_HOSTED.srt",
+      "destination": "submission/final-support/MATCHPULSE_CAPTIONS_SUBMISSION_HOSTED.srt",
+      "sha256": "2325d5d4da6fc59f8b6a5abdecd3d954eceb5ea38bf6eb5cfd62464f96d41da9"
+    },
+    {
+      "filename": "MATCHPULSE_CAPTIONS_TECHNICAL.srt",
+      "action": "retained",
+      "source": "submission/archive/scripts/MATCHPULSE_CAPTIONS_TECHNICAL.srt",
+      "destination": "submission/archive/scripts/MATCHPULSE_CAPTIONS_TECHNICAL.srt",
+      "sha256": "441beccfbe5a1e87ee3786f601d8251757820b484597561a4c389742f27de2cd"
+    },
+    {
+      "filename": "MATCHPULSE_NARRATION_CONVERSATIONAL.json",
+      "action": "retained",
+      "source": "submission/archive/scripts/MATCHPULSE_NARRATION_CONVERSATIONAL.json",
+      "destination": "submission/archive/scripts/MATCHPULSE_NARRATION_CONVERSATIONAL.json",
+      "sha256": "340a1b5614096b0f8d43da0aec02017d8f1c0c3c41804c4d47d806026254dc81"
+    },
+    {
+      "filename": "MATCHPULSE_NARRATION_CONVERSATIONAL_V2.json",
+      "action": "retained",
+      "source": "submission/final-support/MATCHPULSE_NARRATION_CONVERSATIONAL_V2.json",
+      "destination": "submission/final-support/MATCHPULSE_NARRATION_CONVERSATIONAL_V2.json",
+      "sha256": "9930d8b267fc881f48d43537d1b3a999e003e9024e27c04b316a9fc3c7d3c3e2"
+    },
+    {
+      "filename": "MATCHPULSE_PLAYWRIGHT_RECORDING_PLAN.md",
+      "action": "retained",
+      "source": "submission/final-support/MATCHPULSE_PLAYWRIGHT_RECORDING_PLAN.md",
+      "destination": "submission/final-support/MATCHPULSE_PLAYWRIGHT_RECORDING_PLAN.md",
+      "sha256": "441fd062651ec8ca1caa0a8eb21dd82389206205e9ee40aac74da4dbaec22ab5"
+    },
+    {
+      "filename": "MATCHPULSE_SHOT_LISTS.md",
+      "action": "retained",
+      "source": "submission/final-support/MATCHPULSE_SHOT_LISTS.md",
+      "destination": "submission/final-support/MATCHPULSE_SHOT_LISTS.md",
+      "sha256": "ab778d5a7a15e572c2a60adf87becbeabab5f901cc9b80a5b96d35a6bc1854c5"
+    },
+    {
+      "filename": "MATCHPULSE_VIDEO_MANIFEST.json",
+      "action": "retained",
+      "source": "submission/archive/manifests/MATCHPULSE_VIDEO_MANIFEST.json",
+      "destination": "submission/archive/manifests/MATCHPULSE_VIDEO_MANIFEST.json",
+      "sha256": "76d8766bce444848e3b6bedfd4b7f7876545dcb4cfcc35bcad5712661c675c94"
+    },
+    {
+      "filename": "MATCHPULSE_VIDEO_SCRIPTS.md",
+      "action": "retained",
+      "source": "submission/final-support/MATCHPULSE_VIDEO_SCRIPTS.md",
+      "destination": "submission/final-support/MATCHPULSE_VIDEO_SCRIPTS.md",
+      "sha256": "dda877cedd571fdab3c549cbe8d7f6e8e475b0dcc17c26ab5b7e716c3fe34130"
+    },
+    {
+      "filename": "MATCHPULSE_VIDEO_VERIFICATION.txt",
+      "action": "retained",
+      "source": "submission/MATCHPULSE_VIDEO_VERIFICATION.txt",
+      "destination": "submission/MATCHPULSE_VIDEO_VERIFICATION.txt",
+      "sha256": "7e15cf80f92057f36e40945dfb4bfeb403709ec34e5ecd89784c1c787413f528"
+    },
+    {
+      "filename": "PITCH.md",
+      "action": "retained",
+      "source": "submission/PITCH.md",
+      "destination": "submission/PITCH.md",
+      "sha256": "f161e71e3a4e78b2c892079dd1a46cc62226bb29ef2afd79536b512c2f529e36"
+    },
+    {
+      "filename": "PORTAL_SUBMISSION_WORKSHEET.md",
+      "action": "retained",
+      "source": "submission/PORTAL_SUBMISSION_WORKSHEET.md",
+      "destination": "submission/PORTAL_SUBMISSION_WORKSHEET.md",
+      "sha256": "427ec6a0222acd25e729ec528fbc76a26aab8b8f61b95ed69641fa6cac1263e8"
+    },
+    {
+      "filename": "PROJECT_DESCRIPTION.md",
+      "action": "retained",
+      "source": "submission/PROJECT_DESCRIPTION.md",
+      "destination": "submission/PROJECT_DESCRIPTION.md",
+      "sha256": "4748bade9265da01153f2f0aba5b2f357e6cc83ba453f154fbf416f397724529"
+    },
+    {
+      "filename": "REGISTRATION_AND_SUBMISSION_CHECKLIST.md",
+      "action": "retained",
+      "source": "submission/REGISTRATION_AND_SUBMISSION_CHECKLIST.md",
+      "destination": "submission/REGISTRATION_AND_SUBMISSION_CHECKLIST.md",
+      "sha256": "f39e81f6339222d79bd9d821ad0f8911b3ae83f239207f4d7c81e9edabc958f4"
+    },
+    {
+      "filename": "TESTING_INSTRUCTIONS.md",
+      "action": "retained",
+      "source": "submission/TESTING_INSTRUCTIONS.md",
+      "destination": "submission/TESTING_INSTRUCTIONS.md",
+      "sha256": "6ae255769bcecf957f4a5c11346febf72d584d896e7589d8a31c7fbc2f08b0fd"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.manifest.json",
+      "action": "retained",
+      "source": "submission/final-support/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.manifest.json",
+      "destination": "submission/final-support/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.manifest.json",
+      "sha256": "894c56c79feec4f52ab5badb826d28abed657ddd3dfd37aaaf8bcebd39a38aff"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.wav",
+      "action": "retained",
+      "source": "submission/final-support/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.wav",
+      "destination": "submission/final-support/matchpulse-hosted-narration-kokoro-bf-emma-conversational-v2.wav",
+      "sha256": "b361d34127b5806310ba27fb80ce048947f168c659c7c331739e6726a003d2c6"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma-conversational.manifest.json",
+      "action": "retained",
+      "source": "submission/archive/manifests/matchpulse-hosted-narration-kokoro-bf-emma-conversational.manifest.json",
+      "destination": "submission/archive/manifests/matchpulse-hosted-narration-kokoro-bf-emma-conversational.manifest.json",
+      "sha256": "ee2480f616d43882f6ac18741802b53e5887c7e0a1f65f180a55568ce0b7caad"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma-conversational.wav",
+      "action": "retained",
+      "source": "submission/archive/audio/matchpulse-hosted-narration-kokoro-bf-emma-conversational.wav",
+      "destination": "submission/archive/audio/matchpulse-hosted-narration-kokoro-bf-emma-conversational.wav",
+      "sha256": "76ba0ec7b5149f72a19dce216e6b939d8c14929e078015e830e4cd7cdff27f49"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma.manifest.json",
+      "action": "retained",
+      "source": "submission/archive/manifests/matchpulse-hosted-narration-kokoro-bf-emma.manifest.json",
+      "destination": "submission/archive/manifests/matchpulse-hosted-narration-kokoro-bf-emma.manifest.json",
+      "sha256": "6bf060106ddde810da8cd9308ff92b6efde7af543489558c5dd5d242c8423110"
+    },
+    {
+      "filename": "matchpulse-hosted-narration-kokoro-bf-emma.wav",
+      "action": "retained",
+      "source": "submission/archive/audio/matchpulse-hosted-narration-kokoro-bf-emma.wav",
+      "destination": "submission/archive/audio/matchpulse-hosted-narration-kokoro-bf-emma.wav",
+      "sha256": "5a6904ea992b460e60180c8e5c29b9bd2d6aec5240befbe6553e33bebd143297"
+    },
+    {
+      "filename": "matchpulse-submission-demo-captioned.mp4",
+      "action": "retained",
+      "source": "submission/archive/videos/matchpulse-submission-demo-captioned.mp4",
+      "destination": "submission/archive/videos/matchpulse-submission-demo-captioned.mp4",
+      "sha256": "4962982b9e9c84352f564ebdc8ff86d8c0ad6fe975590df857e8daecf0351d4b"
+    },
+    {
+      "filename": "matchpulse-submission-demo.mp4",
+      "action": "retained",
+      "source": "submission/archive/videos/matchpulse-submission-demo.mp4",
+      "destination": "submission/archive/videos/matchpulse-submission-demo.mp4",
+      "sha256": "379b03f12e02269bfc8ab662c2eaa8e533ec6d44c6230b3c1e3f03aee85dc633"
+    },
+    {
+      "filename": "matchpulse-submission-hosted-candidate.mp4",
+      "action": "retained",
+      "source": "submission/archive/videos/matchpulse-submission-hosted-candidate.mp4",
+      "destination": "submission/archive/videos/matchpulse-submission-hosted-candidate.mp4",
+      "sha256": "5a6faaf2bef5603f973e6774568064eb21d91dd9dd60e1f7f87f4b86da939387"
+    },
+    {
+      "filename": "matchpulse-submission-hosted-kokoro-candidate.mp4",
+      "action": "retained",
+      "source": "submission/archive/videos/matchpulse-submission-hosted-kokoro-candidate.mp4",
+      "destination": "submission/archive/videos/matchpulse-submission-hosted-kokoro-candidate.mp4",
+      "sha256": "3f2d195fa566b68733caa71c2fc06dce3f2213e98ff150d8aeda67f42829c6ae"
+    },
+    {
+      "filename": "matchpulse-submission-hosted-kokoro-conversational-candidate.mp4",
+      "action": "retained",
+      "source": "submission/archive/videos/matchpulse-submission-hosted-kokoro-conversational-candidate.mp4",
+      "destination": "submission/archive/videos/matchpulse-submission-hosted-kokoro-conversational-candidate.mp4",
+      "sha256": "f649ac13ed16c798777c945639dac7fad6868c522f8c1c725e974a3724125f45"
+    },
+    {
+      "filename": "matchpulse-submission-hosted-kokoro-conversational-v2-candidate.mp4",
+      "action": "retained",
+      "source": "submission/matchpulse-submission-hosted-kokoro-conversational-v2-candidate.mp4",
+      "destination": "submission/matchpulse-submission-hosted-kokoro-conversational-v2-candidate.mp4",
+      "sha256": "b89c016d8d0c790ae42b3a761d6ec7f709cfa988159649c4cf0e07eb8906dcbf"
+    },
+    {
+      "filename": "matchpulse-technical-demo-captioned.mp4",
+      "action": "retained",
+      "source": "submission/archive/videos/matchpulse-technical-demo-captioned.mp4",
+      "destination": "submission/archive/videos/matchpulse-technical-demo-captioned.mp4",
+      "sha256": "2f35a0db9f88a3e005c46530b09a7abed0cebd72ee569fada130609f9e09a6ab"
+    },
+    {
+      "filename": "matchpulse-technical-demo.mp4",
+      "action": "retained",
+      "source": "submission/archive/videos/matchpulse-technical-demo.mp4",
+      "destination": "submission/archive/videos/matchpulse-technical-demo.mp4",
+      "sha256": "7f6eb4ac06eea00fb4a6ec77bf06dede9804b465f65cd96600a138d7d5f1230c"
+    }
+  ]
+}

@@ -5,13 +5,24 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from threading import RLock
 
-from .models import EventType, Evidence, Insight, MatchEvent, MatchState, TeamState
+from .models import (
+    EventType,
+    Evidence,
+    Insight,
+    MatchEvent,
+    MatchState,
+    TeamState,
+)
 
 
 def _distance(event: MatchEvent) -> float:
-    if None in (event.x, event.y, event.end_x, event.end_y):
+    x = event.x
+    y = event.y
+    end_x = event.end_x
+    end_y = event.end_y
+    if x is None or y is None or end_x is None or end_y is None:
         return 0.0
-    return math.hypot(event.end_x - event.x, event.end_y - event.y)
+    return math.hypot(end_x - x, end_y - y)
 
 
 @dataclass(frozen=True)
@@ -27,8 +38,12 @@ class MatchAccumulator:
     def __init__(self) -> None:
         self._states: dict[str, MatchState] = {}
         self._seen: dict[str, set[str]] = defaultdict(set)
-        self._recent: dict[str, deque[MatchEvent]] = defaultdict(lambda: deque(maxlen=40))
-        self._evidence_events: dict[str, dict[str, MatchEvent]] = defaultdict(dict)
+        self._recent: dict[str, deque[MatchEvent]] = defaultdict(
+            lambda: deque(maxlen=40)
+        )
+        self._evidence_events: dict[str, dict[str, MatchEvent]] = defaultdict(
+            dict
+        )
         self._insights: dict[str, list[Insight]] = defaultdict(list)
         self._lock = RLock()
 
@@ -37,14 +52,19 @@ class MatchAccumulator:
             state = self._states.get(match_id)
             return state.model_copy(deep=True) if state else None
 
-    def evidence_event(self, match_id: str, event_id: str) -> MatchEvent | None:
+    def evidence_event(
+        self, match_id: str, event_id: str
+    ) -> MatchEvent | None:
         with self._lock:
             event = self._evidence_events.get(match_id, {}).get(event_id)
             return event.model_copy(deep=True) if event else None
 
     def insights(self, match_id: str) -> list[Insight]:
         with self._lock:
-            return [item.model_copy(deep=True) for item in self._insights.get(match_id, [])]
+            return [
+                item.model_copy(deep=True)
+                for item in self._insights.get(match_id, [])
+            ]
 
     def reset(self, match_id: str) -> bool:
         with self._lock:
@@ -58,12 +78,16 @@ class MatchAccumulator:
 
     def apply(self, event: MatchEvent) -> ApplyResult:
         with self._lock:
-            state = self._states.setdefault(event.match_id, MatchState(match_id=event.match_id))
+            state = self._states.setdefault(
+                event.match_id, MatchState(match_id=event.match_id)
+            )
             if event.event_id in self._seen[event.match_id]:
                 state.duplicate_count += 1
                 return ApplyResult(state.model_copy(deep=True), True, [])
             if event.sequence <= state.last_sequence:
-                raise ValueError(f"out-of-order sequence {event.sequence}; last accepted is {state.last_sequence}")
+                raise ValueError(
+                    f"out-of-order sequence {event.sequence}; last accepted is {state.last_sequence}"
+                )
 
             self._seen[event.match_id].add(event.event_id)
             self._evidence_events[event.match_id][event.event_id] = event
@@ -80,7 +104,9 @@ class MatchAccumulator:
 
             team = None
             if event.team_id:
-                team = state.teams.setdefault(event.team_id, TeamState(team_id=event.team_id))
+                team = state.teams.setdefault(
+                    event.team_id, TeamState(team_id=event.team_id)
+                )
             self._update_team(team, event)
             generated = self._derive_insights(event, state)
             self._insights[event.match_id].extend(generated)
@@ -95,7 +121,10 @@ class MatchAccumulator:
             team.completed_passes += int(event.outcome == "success")
         elif event.event_type in {EventType.SHOT, EventType.GOAL}:
             team.shots += 1
-            team.shots_on_target += int(event.outcome in {"on_target", "success"} or event.event_type == EventType.GOAL)
+            team.shots_on_target += int(
+                event.outcome in {"on_target", "success"}
+                or event.event_type == EventType.GOAL
+            )
             team.goals += int(event.event_type == EventType.GOAL)
         elif event.event_type == EventType.TACKLE:
             team.tackles += int(event.outcome == "success")
@@ -106,62 +135,204 @@ class MatchAccumulator:
             if isinstance(share, (int, float)):
                 team.possession_pct = max(0.0, min(100.0, float(share)))
 
-    def _derive_insights(self, event: MatchEvent, state: MatchState) -> list[Insight]:
-        out: list[Insight] = []
-        base = dict(match_id=event.match_id, sequence=event.sequence, clock_ms=event.clock_ms,
-                    team_id=event.team_id, player_id=event.player_id)
-
+    def _derive_insights(
+        self, event: MatchEvent, state: MatchState
+    ) -> list[Insight]:
+        insight = None
         if event.event_type == EventType.GOAL:
-            score = {k: v.goals for k, v in state.teams.items()}
-            out.append(Insight(**base, kind="goal", severity="major", stats={"score": str(score)},
-                evidence=Evidence(event_ids=[event.event_id], inputs={"event_type": "goal", "score": str(score)},
-                                  formula="authoritative goal event + aggregate team goals", confidence=1.0), expires_in_ms=20_000))
+            insight = self._derive_goal(event, state)
+        elif event.event_type == EventType.SHOT:
+            insight = self._derive_shot(event)
+        elif event.event_type == EventType.PASS:
+            insight = self._derive_pass(event)
+        elif event.event_type == EventType.PRESSURE:
+            insight = self._derive_pressure(event)
+        elif event.event_type == EventType.POSSESSION:
+            insight = self._derive_possession(event, state)
+        elif event.event_type == EventType.TACKLE:
+            insight = self._derive_tackle(event)
+        return [insight] if insight else []
 
-        if event.event_type == EventType.SHOT and event.speed_kmh is not None and event.speed_kmh >= 95:
+    def _derive_goal(
+        self, event: MatchEvent, state: MatchState
+    ) -> Insight | None:
+        score = {k: v.goals for k, v in state.teams.items()}
+        return Insight(
+            match_id=event.match_id,
+            sequence=event.sequence,
+            clock_ms=event.clock_ms,
+            team_id=event.team_id,
+            player_id=event.player_id,
+            kind="goal",
+            severity="major",
+            stats={"score": str(score)},
+            evidence=Evidence(
+                event_ids=[event.event_id],
+                inputs={"event_type": "goal", "score": str(score)},
+                formula="authoritative goal event + aggregate team goals",
+                confidence=1.0,
+            ),
+            expires_in_ms=20_000,
+        )
+
+    def _derive_shot(self, event: MatchEvent) -> Insight | None:
+        if event.speed_kmh is not None and event.speed_kmh >= 95:
             on_target = int(event.outcome == "on_target")
-            out.append(Insight(**base, kind="shot_speed", severity="notable",
-                stats={"speed_kmh": round(event.speed_kmh, 1), "on_target": on_target},
-                evidence=Evidence(event_ids=[event.event_id], inputs={"speed_kmh": round(event.speed_kmh, 1), "on_target": on_target},
-                                  formula="highlight when measured shot speed >= 95 km/h", confidence=0.96)))
+            return Insight(
+                match_id=event.match_id,
+                sequence=event.sequence,
+                clock_ms=event.clock_ms,
+                team_id=event.team_id,
+                player_id=event.player_id,
+                kind="shot_speed",
+                severity="notable",
+                stats={
+                    "speed_kmh": round(event.speed_kmh, 1),
+                    "on_target": on_target,
+                },
+                evidence=Evidence(
+                    event_ids=[event.event_id],
+                    inputs={
+                        "speed_kmh": round(event.speed_kmh, 1),
+                        "on_target": on_target,
+                    },
+                    formula="highlight when measured shot speed >= 95 km/h",
+                    confidence=0.96,
+                ),
+            )
+        return None
 
-        if event.event_type == EventType.PASS:
-            distance = _distance(event)
-            progressive = max(0.0, (event.end_x or 0) - (event.x or 0))
-            pressure = event.pressure or 0.0
-            difficulty = min(100.0, distance * 1.15 + progressive * 0.55 + pressure * 28)
-            if difficulty >= 55:
-                out.append(Insight(**base, kind="pass_quality", severity="notable",
-                    stats={"distance_units": round(distance, 1), "difficulty": round(difficulty, 1),
-                           "progressive_units": round(progressive, 1), "completed": int(event.outcome == "success")},
-                    evidence=Evidence(event_ids=[event.event_id],
-                        inputs={"distance": round(distance, 2), "progressive": round(progressive, 2), "pressure": round(pressure, 2)},
-                        formula="min(100, distance*1.15 + progressive*0.55 + pressure*28)", confidence=0.91)))
+    def _derive_pass(self, event: MatchEvent) -> Insight | None:
+        distance = _distance(event)
+        progressive = max(0.0, (event.end_x or 0) - (event.x or 0))
+        pressure = event.pressure or 0.0
+        difficulty = min(
+            100.0, distance * 1.15 + progressive * 0.55 + pressure * 28
+        )
+        if difficulty >= 55:
+            return Insight(
+                match_id=event.match_id,
+                sequence=event.sequence,
+                clock_ms=event.clock_ms,
+                team_id=event.team_id,
+                player_id=event.player_id,
+                kind="pass_quality",
+                severity="notable",
+                stats={
+                    "distance_units": round(distance, 1),
+                    "difficulty": round(difficulty, 1),
+                    "progressive_units": round(progressive, 1),
+                    "completed": int(event.outcome == "success"),
+                },
+                evidence=Evidence(
+                    event_ids=[event.event_id],
+                    inputs={
+                        "distance": round(distance, 2),
+                        "progressive": round(progressive, 2),
+                        "pressure": round(pressure, 2),
+                    },
+                    formula="min(100, distance*1.15 + progressive*0.55 + pressure*28)",
+                    confidence=0.91,
+                ),
+            )
+        return None
 
-        if event.event_type == EventType.PRESSURE and (event.pressure or 0) >= 0.72:
-            recent = [e for e in self._recent[event.match_id]
-                      if e.event_type == EventType.PRESSURE and e.team_id == event.team_id
-                      and event.clock_ms - e.clock_ms <= 30_000 and (e.pressure or 0) >= 0.72]
-            if len(recent) >= 3:
-                ids = [e.event_id for e in recent[-5:]]
-                average = sum(e.pressure or 0 for e in recent[-5:]) / min(5, len(recent))
-                out.append(Insight(**base, kind="pressing_surge", severity="notable",
-                    stats={"high_pressure_events_30s": len(recent), "average_pressure": round(average, 2)},
-                    evidence=Evidence(event_ids=ids,
-                        inputs={"events": len(recent), "window_seconds": 30, "average_pressure": round(average, 2)},
-                        formula="count pressure >= .72 for same team in trailing 30 seconds", confidence=0.94)))
+    def _derive_pressure(self, event: MatchEvent) -> Insight | None:
+        if (event.pressure or 0) < 0.72:
+            return None
+        recent = [
+            e
+            for e in self._recent[event.match_id]
+            if e.event_type == EventType.PRESSURE
+            and e.team_id == event.team_id
+            and event.clock_ms - e.clock_ms <= 30_000
+            and (e.pressure or 0) >= 0.72
+        ]
+        if len(recent) >= 3:
+            ids = [e.event_id for e in recent[-5:]]
+            average = sum(e.pressure or 0 for e in recent[-5:]) / min(
+                5, len(recent)
+            )
+            return Insight(
+                match_id=event.match_id,
+                sequence=event.sequence,
+                clock_ms=event.clock_ms,
+                team_id=event.team_id,
+                player_id=event.player_id,
+                kind="pressing_surge",
+                severity="notable",
+                stats={
+                    "high_pressure_events_30s": len(recent),
+                    "average_pressure": round(average, 2),
+                },
+                evidence=Evidence(
+                    event_ids=ids,
+                    inputs={
+                        "events": len(recent),
+                        "window_seconds": 30,
+                        "average_pressure": round(average, 2),
+                    },
+                    formula="count pressure >= .72 for same team in trailing 30 seconds",
+                    confidence=0.94,
+                ),
+            )
+        return None
 
-        if event.event_type == EventType.POSSESSION and event.team_id:
-            share = state.teams[event.team_id].possession_pct
-            previous = event.metadata.get("previous_share")
-            if isinstance(previous, (int, float)) and abs(share - float(previous)) >= 10:
-                out.append(Insight(**base, kind="possession_swing", severity="notable",
-                    stats={"from_pct": round(float(previous), 1), "to_pct": round(share, 1), "swing_points": round(share-float(previous), 1)},
-                    evidence=Evidence(event_ids=[event.event_id], inputs={"previous": float(previous), "current": share},
-                        formula="current possession share - previous possession share", confidence=0.98)))
+    def _derive_possession(
+        self, event: MatchEvent, state: MatchState
+    ) -> Insight | None:
+        if not event.team_id:
+            return None
+        share = state.teams[event.team_id].possession_pct
+        previous = event.metadata.get("previous_share")
+        if (
+            isinstance(previous, (int, float))
+            and abs(share - float(previous)) >= 10
+        ):
+            return Insight(
+                match_id=event.match_id,
+                sequence=event.sequence,
+                clock_ms=event.clock_ms,
+                team_id=event.team_id,
+                player_id=event.player_id,
+                kind="possession_swing",
+                severity="notable",
+                stats={
+                    "from_pct": round(float(previous), 1),
+                    "to_pct": round(share, 1),
+                    "swing_points": round(share - float(previous), 1),
+                },
+                evidence=Evidence(
+                    event_ids=[event.event_id],
+                    inputs={
+                        "previous": float(previous),
+                        "current": share,
+                    },
+                    formula="current possession share - previous possession share",
+                    confidence=0.98,
+                ),
+            )
+        return None
 
-        if event.event_type == EventType.TACKLE and event.outcome == "success" and (event.x or 0) >= 65:
-            out.append(Insight(**base, kind="tackle", severity="notable",
-                stats={"field_x": round(event.x or 0, 1), "won": 1},
-                evidence=Evidence(event_ids=[event.event_id], inputs={"field_x": round(event.x or 0, 1)},
-                    formula="successful tackle in attacking 35% of pitch", confidence=0.97)))
-        return out
+    def _derive_tackle(self, event: MatchEvent) -> Insight | None:
+        if event.outcome == "success" and (event.x or 0) >= 65:
+            return Insight(
+                match_id=event.match_id,
+                sequence=event.sequence,
+                clock_ms=event.clock_ms,
+                team_id=event.team_id,
+                player_id=event.player_id,
+                kind="tackle",
+                severity="notable",
+                stats={
+                    "field_x": round(event.x or 0, 1),
+                    "won": 1,
+                },
+                evidence=Evidence(
+                    event_ids=[event.event_id],
+                    inputs={"field_x": round(event.x or 0, 1)},
+                    formula="successful tackle in attacking 35% of pitch",
+                    confidence=0.97,
+                ),
+            )
+        return None
