@@ -207,8 +207,14 @@ az role assignment create \
 through the runtime environment and never commit it.
 
 Foundry is **never required**. With no Foundry configuration the service
-reports `"foundry_mode": "deterministic-fallback"` on `/health/ready` and
+reports `"foundry_mode": "disabled"` on `/health/ready` and
 produces every insight from the deterministic pipeline.
+
+`foundry_mode` reports one of four states: `disabled` (Foundry is
+intentionally off), `configured-unverified` (configuration exists but no model
+call has succeeded yet), `verified` (a model call completed and passed every
+guard), and `degraded-fallback` (a configured provider failed or a rewrite was
+rejected, so the deterministic narrative is used).
 
 ---
 
