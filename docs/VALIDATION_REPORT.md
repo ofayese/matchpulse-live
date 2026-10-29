@@ -1,6 +1,14 @@
 # Validation report - 2026-10-20
 
-## Verified in this workspace
+> **HISTORICAL VALIDATION REPORT.** This report records the validation state
+> for the release and image identified below (2026-10-20). It is retained for
+> provenance and does not describe the current branch validation state. See
+> [Current validation](#current-validation-2026-10-29) at the end of this file.
+> The submitted release is scoped to source SHA
+> `335781f928011f99a644083d80bfe4dfc480b1a6` and image digest
+> `sha256:f413c32f671b191a4b3c63c8bed9c7b318ccdc60633bf222d5cba0049feaa226`.
+
+## Verified in this workspace (historical, 2026-10-20)
 
 - Python source, tests, and preflight compiled successfully on Python 3.14.8.
   Python 3.12 is the reference interpreter (CI pins 3.12 and the container image
@@ -66,7 +74,10 @@
   The workflow now installs the pinned Bicep CLI `0.48.1` explicitly, and the
   runs for the follow-up commit `c1177ca` passed - `azure-deploy` run
   `39476696692` and `challenge-ci` run `39476696757`.
-- Container publication: `publish-container.yml` run `39475822157` published
+- Container publication (SUPERSEDED RELEASE DIGEST - retained for historical
+  provenance only; the current approved digest is
+  `sha256:f413c32f671b191a4b3c63c8bed9c7b318ccdc60633bf222d5cba0049feaa226`):
+  `publish-container.yml` run `39475822157` published
   `ghcr.io/ofayese/matchpulse-live:sha-e8289265dc1920a2f313a9ec45ebf748591a3071`
   with digest
   `sha256:67546291cf1fc9aa236327a1d53230e8caa589ce0f72c758b28c6a6effee4d90`.
@@ -112,3 +123,35 @@ python scripts/smoke_test.py --url http://127.0.0.1:8080
 For final submission, run the GitHub workflow and Azure checks in
 `submission/REGISTRATION_AND_SUBMISSION_CHECKLIST.md`, then update this report
 with links and evidence.
+
+## Current validation - 2026-10-29
+
+This validation applies to current source HEAD
+`067fa190ebaf64fdbefa5fd0bdb741f1015f7c4a`; it does not change the submitted
+release scope. The approved submitted image remains
+`ghcr.io/ofayese/matchpulse-live@sha256:f413c32f671b191a4b3c63c8bed9c7b318ccdc60633bf222d5cba0049feaa226`,
+built from source revision
+`335781f928011f99a644083d80bfe4dfc480b1a6`, an ancestor of current HEAD.
+
+| Gate | Result |
+| --- | --- |
+| Python | 3.12.0 |
+| Tests | 208 passed, 2 skipped, 0 failed (5.13 seconds) |
+| Coverage | 90.50% (80% required) |
+| Compile, Ruff, preflight, solution validation | PASS |
+| Current-source image: hardened runtime and smoke | PASS |
+| Approved immutable image: exact digest, hardened runtime and smoke | PASS |
+| Live duplicate event | PASS on both images: HTTP 202, duplicate true, no new insights or event-count/state-sequence change |
+| Live out-of-order event | PASS on both images: HTTP 409, state unchanged |
+| Live non-synthetic event | PASS on both images: HTTP 422 |
+| Readiness after negative event checks | PASS on both images |
+| `MANIFEST.sha256` | PASS_HISTORICAL: all 66 entries match the Git blobs at the manifest's last-change commit `68409d3`; it is not a manifest of current HEAD |
+| Trivy filesystem and image scans; pip-audit | PASS; no HIGH/CRITICAL image findings and no known audited dependency vulnerabilities |
+| Gitleaks | Test-fixture literals in `tests/test_foundry_provider.py` and `tests/test_local_tts.py` remain triaged but unsuppressed; no allowlist was added |
+| Azure | Read-only Foundry account query returned 0 model deployments; Container App retained the approved digest, synthetic-only mode and disabled ingress |
+
+The test export and its temporary directory were outside the repository. No
+application behavior, approved image, Azure resource, media, or publication
+state was changed. Documentation corrections in this cleanup only reconcile
+the current Foundry mode wording and label earlier validation and image
+evidence as historical.
