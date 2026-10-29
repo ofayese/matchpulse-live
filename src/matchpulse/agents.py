@@ -121,7 +121,7 @@ class PersonalizationAgent:
 
 
 class SupervisorAgent:
-    """Purposeful multi-agent pipeline with shared state and isolated fallbacks."""
+    """Multi-agent pipeline with shared state and isolated fallbacks."""
 
     def __init__(self, state: MatchAccumulator | None = None) -> None:
         self.state = state or MatchAccumulator()
